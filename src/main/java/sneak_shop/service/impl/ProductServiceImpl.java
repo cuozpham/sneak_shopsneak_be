@@ -340,6 +340,10 @@ public class ProductServiceImpl implements ProductService {
                         m.getCategory().getSlug()
                 ))
                 .toList();
+        List<MediaItem> mediaItems = product.getImages().stream()
+                .filter(img -> img.getType() == null || !"review".equalsIgnoreCase(img.getType()))
+                .map(img -> new MediaItem(img.getId(), img.getImageUrl(), img.getType()))
+                .toList();
 
         return new ProductResponse(
                 productId,
@@ -348,7 +352,7 @@ public class ProductServiceImpl implements ProductService {
                 product.getName(), product.getSlug(), null,
                 product.getPrice(), product.getDiscountPercent(), product.getStockQuantity(),
                 product.getCoverImageUrl(), null,
-                List.of(),
+                mediaItems,
                 colorsByProductId.getOrDefault(productId, List.of()),
                 product.getStatus(), product.getCreatedAt(),
                 product.getCreatedBy(), product.getUpdatedBy(),
