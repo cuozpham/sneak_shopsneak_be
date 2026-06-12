@@ -22,6 +22,8 @@ import sneak_shop.enums.UserRole;
 import sneak_shop.repository.UserRepository;
 
 import java.util.List;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -97,13 +99,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowedOrigins(parseAllowedOrigins());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
+    }
+
+    private List<String> parseAllowedOrigins() {
+        if (allowedOrigins == null || allowedOrigins.isBlank()) {
+            return List.of("http://localhost:3000");
+        }
+        return Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isBlank())
+                .collect(Collectors.toList());
     }
 
     @Bean
