@@ -27,6 +27,7 @@ import java.util.Objects;
 public class ReviewServiceImpl implements ReviewService {
 
     private static final Logger log = LoggerFactory.getLogger(ReviewServiceImpl.class);
+    private static final String EDIT_MARKER = "\u0001EDITED_ONCE\u0001";
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
@@ -104,7 +105,6 @@ public class ReviewServiceImpl implements ReviewService {
                 .shop(shop)
                 .rating(req.rating())
                 .comment(req.comment())
-                .editCount(0)
                 .build();
         review = reviewRepository.save(review);
 
@@ -133,7 +133,7 @@ public class ReviewServiceImpl implements ReviewService {
         if (review.getShopReply() != null) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Da co phan hoi cua shop, khong the sua danh gia");
         }
-        if (review.getEditCount() != null && review.getEditCount() >= 1) {
+        if (isEditedOnce(review.getComment())) {
             throw new AppException(ErrorCode.CONFLICT, "Ban chi duoc sua danh gia mot lan");
         }
         Instant editableUntil = review.getCreatedAt().plus(Duration.ofHours(24));
@@ -142,8 +142,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         if (req.rating() != null) review.setRating(req.rating());
-        review.setComment(req.comment());
-        review.setEditCount((review.getEditCount() == null ? 0 : review.getEditCount()) + 1);
+        review.setComment(EDIT_MARKER + (req.comment() == null ? "" : req.comment()));
         review = reviewRepository.save(review);
         replaceReviewImages(review, req.productImageIds());
         return ReviewResponse.from(review);
@@ -227,6 +226,10 @@ public class ReviewServiceImpl implements ReviewService {
         if (productImageIds != null && productImageIds.size() > 5) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chi duoc toi da 5 anh danh gia");
         }
+    }
+
+    private boolean isEditedOnce(String comment) {
+        return comment != null && comment.startsWith(EDIT_MARKER);
     }
 
     @Transactional

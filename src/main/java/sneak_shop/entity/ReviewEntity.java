@@ -42,10 +42,6 @@ public class ReviewEntity {
     @Column(length = 300)
     private String comment;
 
-    @Column(name = "edit_count")
-    @Builder.Default
-    private Integer editCount = 0;
-
     @Column(name = "shop_reply", columnDefinition = "TEXT")
     private String shopReply;
 

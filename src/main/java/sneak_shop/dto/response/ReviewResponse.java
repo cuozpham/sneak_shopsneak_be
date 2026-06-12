@@ -25,6 +25,8 @@ public record ReviewResponse(
         Instant createdAt
 ) {
     public static ReviewResponse from(ReviewEntity e) {
+        String comment = sanitizeComment(e.getComment());
+        Integer editCount = isEditedOnce(e.getComment()) ? 1 : 0;
         List<Integer> productImageIds = e.getImages() == null ? List.of() : e.getImages().stream()
                 .filter(img -> img.getProductImage() != null)
                 .map(img -> img.getProductImage().getId())
@@ -42,8 +44,8 @@ public record ReviewResponse(
                 e.getShop() != null ? e.getShop().getId() : null,
                 e.getShop() != null ? e.getShop().getName() : null,
                 e.getRating(),
-                e.getComment(),
-                e.getEditCount(),
+                comment,
+                editCount,
                 productImageIds,
                 imageUrls,
                 e.getShopReply(),
@@ -52,5 +54,16 @@ public record ReviewResponse(
                 e.getReplyAt(),
                 e.getCreatedAt()
         );
+    }
+
+    private static final String EDIT_MARKER = "\u0001EDITED_ONCE\u0001";
+
+    private static boolean isEditedOnce(String comment) {
+        return comment != null && comment.startsWith(EDIT_MARKER);
+    }
+
+    private static String sanitizeComment(String comment) {
+        if (comment == null) return null;
+        return isEditedOnce(comment) ? comment.substring(EDIT_MARKER.length()) : comment;
     }
 }
