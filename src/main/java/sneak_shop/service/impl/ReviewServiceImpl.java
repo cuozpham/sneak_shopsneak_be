@@ -4,6 +4,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sneak_shop.common.exception.AppException;
 import sneak_shop.common.exception.ErrorCode;
 import sneak_shop.common.response.PageResponse;
@@ -21,16 +23,20 @@ import java.time.Instant;
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
+    private static final Logger log = LoggerFactory.getLogger(ReviewServiceImpl.class);
+
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
+    private final ProductShopRepository shopRepository;
     private final ProductImageRepository productImageRepository;
     private final ReviewImageRepository reviewImageRepository;
     private final NotificationService notificationService;
 
     public ReviewServiceImpl(ReviewRepository reviewRepository, UserRepository userRepository,
                              OrderItemRepository orderItemRepository, ProductRepository productRepository,
+                             ProductShopRepository shopRepository,
                              ProductImageRepository productImageRepository,
                              ReviewImageRepository reviewImageRepository,
                              NotificationService notificationService) {
@@ -38,6 +44,7 @@ public class ReviewServiceImpl implements ReviewService {
         this.userRepository = userRepository;
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
+        this.shopRepository = shopRepository;
         this.productImageRepository = productImageRepository;
         this.reviewImageRepository = reviewImageRepository;
         this.notificationService = notificationService;
@@ -77,10 +84,23 @@ public class ReviewServiceImpl implements ReviewService {
         if (orderItem.getOrder().getStatus() != OrderStatus.completed) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chi co the danh gia don hang da hoan thanh");
         }
-        ProductEntity product = orderItem.getProduct();
+        ProductEntity product = productRepository.findById(orderItem.getProduct().getId())
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
+        ProductShopEntity shop = orderItem.getOrder().getShop();
+        if (shop == null || shop.getId() == null) {
+            shop = product.getShop();
+        }
+        if (shop == null || shop.getId() == null) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Don hang chua gan shop");
+        }
+        shop = shopRepository.findById(shop.getId())
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Shop khong ton tai"));
 
         ReviewEntity review = ReviewEntity.builder()
-                .user(user).orderItem(orderItem).product(product)
+                .user(user)
+                .orderItem(orderItem)
+                .product(product)
+                .shop(shop)
                 .rating(req.rating()).comment(req.comment()).build();
         review = reviewRepository.save(review);
 
@@ -98,12 +118,16 @@ public class ReviewServiceImpl implements ReviewService {
 
         review.getImages().clear();
         review.getImages().addAll(reviewImageRepository.findByReviewId(review.getId()));
-        notificationService.notifyAdmins(
-                "Co danh gia moi",
-                "San pham " + product.getName() + " vua co mot danh gia moi.",
-                "review_new",
-                null
-        );
+        try {
+            notificationService.notifyAdmins(
+                    "Co danh gia moi",
+                    "San pham " + product.getName() + " vua co mot danh gia moi.",
+                    "review_new",
+                    null
+            );
+        } catch (Exception ex) {
+            log.warn("Failed to notify admins about review {}: {}", review.getId(), ex.getMessage(), ex);
+        }
         return ReviewResponse.from(review);
     }
 
