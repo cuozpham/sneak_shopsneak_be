@@ -116,6 +116,7 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal shippingFee = subtotal.compareTo(new BigDecimal("500000")) >= 0
                 ? BigDecimal.ZERO : new BigDecimal("30000");
         BigDecimal total = subtotal.add(shippingFee);
+        ProductShopEntity orderShop = resolveOrderShop(items);
 
         AddressEntity linkedAddress = null;
         if (req.addressId() != null) {
@@ -126,7 +127,7 @@ public class OrderServiceImpl implements OrderService {
 
         OrderEntity order = OrderEntity.builder()
                 .orderCode("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
-                .user(user).address(linkedAddress)
+                .user(user).address(linkedAddress).shop(orderShop)
                 .discountAmount(BigDecimal.ZERO)
                 .recipientName(req.recipientName()).recipientPhone(req.recipientPhone())
                 .shippingAddress(req.shippingAddress()).shippingWard(req.shippingWard())
@@ -244,6 +245,15 @@ public class OrderServiceImpl implements OrderService {
         return cartItemRepository.findByUserId(userId).stream()
                 .map(c -> new OrderItem(c.getProduct(), c.getVariant(), c.getColor(), c.getQuantity()))
                 .toList();
+    }
+
+    private ProductShopEntity resolveOrderShop(List<OrderItem> items) {
+        for (OrderItem item : items) {
+            if (item.product() != null && item.product().getShop() != null) {
+                return item.product().getShop();
+            }
+        }
+        return null;
     }
 
     private BigDecimal finalItemPrice(OrderItem item) {

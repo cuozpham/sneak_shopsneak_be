@@ -86,10 +86,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
         ProductEntity product = productRepository.findById(orderItem.getProduct().getId())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
-        ProductShopEntity shop = orderItem.getOrder().getShop();
-        if (shop == null || shop.getId() == null) {
-            shop = product.getShop();
-        }
+        ProductShopEntity shop = resolveReviewShop(orderItem, product);
         if (shop == null || shop.getId() == null) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Don hang chua gan shop");
         }
@@ -129,6 +126,24 @@ public class ReviewServiceImpl implements ReviewService {
             log.warn("Failed to notify admins about review {}: {}", review.getId(), ex.getMessage(), ex);
         }
         return ReviewResponse.from(review);
+    }
+
+    private ProductShopEntity resolveReviewShop(OrderItemEntity orderItem, ProductEntity product) {
+        ProductShopEntity shop = orderItem.getOrder().getShop();
+        if (shop != null && shop.getId() != null) {
+            return shop;
+        }
+        if (product != null && product.getShop() != null && product.getShop().getId() != null) {
+            return product.getShop();
+        }
+        return orderItemRepository.findByOrderId(orderItem.getOrder().getId()).stream()
+                .map(OrderItemEntity::getProduct)
+                .filter(p -> p != null && p.getShop() != null && p.getShop().getId() != null)
+                .map(ProductEntity::getShop)
+                .findFirst()
+                .orElseGet(() -> shopRepository.count() == 1
+                        ? shopRepository.findAll().stream().findFirst().orElse(null)
+                        : null);
     }
 
     @Transactional
