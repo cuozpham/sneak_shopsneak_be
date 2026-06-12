@@ -1,11 +1,13 @@
 package sneak_shop.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class UserSchemaInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
@@ -16,11 +18,15 @@ public class UserSchemaInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (!tableExists("users") || !columnExists("users", "phone_number")) {
-            return;
-        }
+        try {
+            if (!tableExists("users") || !columnExists("users", "phone_number")) {
+                return;
+            }
 
-        jdbcTemplate.execute("ALTER TABLE users MODIFY COLUMN phone_number VARCHAR(20) NULL");
+            jdbcTemplate.execute("ALTER TABLE users MODIFY COLUMN phone_number VARCHAR(20) NULL");
+        } catch (Exception ex) {
+            log.warn("User schema initializer skipped: {}", ex.getMessage(), ex);
+        }
     }
 
     private boolean tableExists(String table) {

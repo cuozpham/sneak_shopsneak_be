@@ -1,11 +1,13 @@
 package sneak_shop.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class ChatSchemaInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
@@ -16,21 +18,25 @@ public class ChatSchemaInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (!tableExists("chat_messages")) {
-            return;
-        }
+        try {
+            if (!tableExists("chat_messages")) {
+                return;
+            }
 
-        ensureColumn("chat_messages", "order_code", "VARCHAR(50) NULL");
-        ensureColumn("chat_messages", "user_id", "INT NULL");
-        ensureColumn("chat_messages", "sender_role", "VARCHAR(10) NULL");
-        ensureColumn("chat_messages", "sender_name", "VARCHAR(200) NULL");
+            ensureColumn("chat_messages", "order_code", "VARCHAR(50) NULL");
+            ensureColumn("chat_messages", "user_id", "INT NULL");
+            ensureColumn("chat_messages", "sender_role", "VARCHAR(10) NULL");
+            ensureColumn("chat_messages", "sender_name", "VARCHAR(200) NULL");
 
-        // Old schema compatibility: let legacy columns stay harmless if the table was created before the refactor.
-        if (columnExists("chat_messages", "conversation_id")) {
-            jdbcTemplate.execute("ALTER TABLE chat_messages MODIFY COLUMN conversation_id INT NULL");
-        }
-        if (columnExists("chat_messages", "sender_type")) {
-            jdbcTemplate.execute("ALTER TABLE chat_messages MODIFY COLUMN sender_type VARCHAR(20) NULL");
+            // Old schema compatibility: let legacy columns stay harmless if the table was created before the refactor.
+            if (columnExists("chat_messages", "conversation_id")) {
+                jdbcTemplate.execute("ALTER TABLE chat_messages MODIFY COLUMN conversation_id INT NULL");
+            }
+            if (columnExists("chat_messages", "sender_type")) {
+                jdbcTemplate.execute("ALTER TABLE chat_messages MODIFY COLUMN sender_type VARCHAR(20) NULL");
+            }
+        } catch (Exception ex) {
+            log.warn("Chat schema initializer skipped: {}", ex.getMessage(), ex);
         }
     }
 

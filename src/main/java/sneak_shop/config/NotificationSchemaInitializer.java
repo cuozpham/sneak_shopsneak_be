@@ -1,11 +1,13 @@
 package sneak_shop.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class NotificationSchemaInitializer implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
@@ -16,20 +18,24 @@ public class NotificationSchemaInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (!tableExists("notifications")) {
-            return;
-        }
+        try {
+            if (!tableExists("notifications")) {
+                return;
+            }
 
-        boolean hasUserId = columnExists("notifications", "user_id");
-        boolean hasCustomerId = columnExists("notifications", "customer_id");
+            boolean hasUserId = columnExists("notifications", "user_id");
+            boolean hasCustomerId = columnExists("notifications", "customer_id");
 
-        if (!hasUserId && hasCustomerId) {
-            jdbcTemplate.execute("ALTER TABLE notifications CHANGE COLUMN customer_id user_id INT NOT NULL");
-            return;
-        }
+            if (!hasUserId && hasCustomerId) {
+                jdbcTemplate.execute("ALTER TABLE notifications CHANGE COLUMN customer_id user_id INT NOT NULL");
+                return;
+            }
 
-        if (hasUserId && hasCustomerId) {
-            jdbcTemplate.execute("ALTER TABLE notifications MODIFY COLUMN customer_id INT NULL");
+            if (hasUserId && hasCustomerId) {
+                jdbcTemplate.execute("ALTER TABLE notifications MODIFY COLUMN customer_id INT NULL");
+            }
+        } catch (Exception ex) {
+            log.warn("Notification schema initializer skipped: {}", ex.getMessage(), ex);
         }
     }
 

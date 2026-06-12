@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import lombok.extern.slf4j.Slf4j;
 import sneak_shop.entity.UserEntity;
 import sneak_shop.enums.UserRole;
 import sneak_shop.repository.UserRepository;
@@ -28,6 +29,7 @@ import java.util.stream.Collectors;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Slf4j
 public class SecurityConfig {
 
     private static final String PRIMARY_ADMIN_EMAIL = "phamcuong26.dev@gmail.com";
@@ -126,8 +128,12 @@ public class SecurityConfig {
     @Bean
     public CommandLineRunner seedDefaultUsers(UserRepository userRepository, PasswordEncoder encoder) {
         return args -> {
-            seedUser(userRepository, encoder, PRIMARY_ADMIN_EMAIL, "Cuong", "123456", "0900000001", UserRole.admin);
-            seedUser(userRepository, encoder, "user@sneakshop.vn", "User", "123456", "0900000002", UserRole.user);
+            try {
+                seedUser(userRepository, encoder, PRIMARY_ADMIN_EMAIL, "Cuong", "123456", "0900000001", UserRole.admin);
+                seedUser(userRepository, encoder, "user@sneakshop.vn", "User", "123456", "0900000002", UserRole.user);
+            } catch (Exception ex) {
+                log.warn("Skipping default user seed during startup: {}", ex.getMessage(), ex);
+            }
         };
     }
 
