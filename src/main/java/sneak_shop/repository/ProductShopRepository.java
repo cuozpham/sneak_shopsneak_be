@@ -7,8 +7,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import sneak_shop.entity.ProductShopEntity;
 
+import java.util.Optional;
+
 public interface ProductShopRepository extends JpaRepository<ProductShopEntity, Integer> {
 
     @Query("SELECT s FROM ProductShopEntity s WHERE :keyword IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<ProductShopEntity> search(@Param("keyword") String keyword, Pageable pageable);
+
+    Optional<ProductShopEntity> findByNameIgnoreCase(String name);
 }

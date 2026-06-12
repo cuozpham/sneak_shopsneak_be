@@ -141,9 +141,12 @@ public class ReviewServiceImpl implements ReviewService {
                 .filter(p -> p != null && p.getShop() != null && p.getShop().getId() != null)
                 .map(ProductEntity::getShop)
                 .findFirst()
-                .orElseGet(() -> shopRepository.count() == 1
-                        ? shopRepository.findAll().stream().findFirst().orElse(null)
-                        : null);
+                .orElseGet(this::resolveDefaultShop);
+    }
+
+    private ProductShopEntity resolveDefaultShop() {
+        return shopRepository.findByNameIgnoreCase("sneak")
+                .orElseGet(() -> shopRepository.save(ProductShopEntity.builder().name("sneak").build()));
     }
 
     @Transactional

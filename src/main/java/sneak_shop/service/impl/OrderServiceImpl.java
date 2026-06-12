@@ -37,6 +37,7 @@ public class OrderServiceImpl implements OrderService {
     private final UserRepository userRepository;
     private final AddressRepository addressRepository;
     private final NotificationRepository notificationRepository;
+    private final ProductShopRepository shopRepository;
     private final ProductVariantColorRepository colorRepository;
     private final ProductRepository productRepository;
     private final ProductVariantRepository variantRepository;
@@ -51,6 +52,7 @@ public class OrderServiceImpl implements OrderService {
                             OrderStatusHistoryRepository historyRepository, CartItemRepository cartItemRepository,
                             UserRepository userRepository, AddressRepository addressRepository,
                             NotificationRepository notificationRepository,
+                            ProductShopRepository shopRepository,
                             ProductVariantColorRepository colorRepository, ProductRepository productRepository,
                             ProductVariantRepository variantRepository,
                             TransactionRepository transactionRepository,
@@ -66,6 +68,7 @@ public class OrderServiceImpl implements OrderService {
         this.userRepository = userRepository;
         this.addressRepository = addressRepository;
         this.notificationRepository = notificationRepository;
+        this.shopRepository = shopRepository;
         this.colorRepository = colorRepository;
         this.productRepository = productRepository;
         this.variantRepository = variantRepository;
@@ -253,7 +256,12 @@ public class OrderServiceImpl implements OrderService {
                 return item.product().getShop();
             }
         }
-        return null;
+        return resolveDefaultShop();
+    }
+
+    private ProductShopEntity resolveDefaultShop() {
+        return shopRepository.findByNameIgnoreCase("sneak")
+                .orElseGet(() -> shopRepository.save(ProductShopEntity.builder().name("sneak").build()));
     }
 
     private BigDecimal finalItemPrice(OrderItem item) {

@@ -570,9 +570,14 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductShopEntity resolveShop(Integer shopId) {
-        if (shopId == null) return null;
+        if (shopId == null) return resolveDefaultShop();
         return shopRepository.findById(shopId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Shop khong ton tai"));
+    }
+
+    private ProductShopEntity resolveDefaultShop() {
+        return shopRepository.findByNameIgnoreCase("sneak")
+                .orElseGet(() -> shopRepository.save(ProductShopEntity.builder().name("sneak").build()));
     }
 
     private String currentUser() {
