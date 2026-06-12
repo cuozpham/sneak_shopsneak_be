@@ -2,4 +2,4 @@
 buildCommand = "./mvnw clean package -DskipTests"
 
 [deploy]
-startCommand = "sh -c 'java -jar target/sneak_shop-0.0.1-SNAPSHOT.jar --server.address=0.0.0.0 --server.port=${PORT:-8080}'"
+startCommand = "sh -c 'exec java -jar target/sneak_shop-0.0.1-SNAPSHOT.jar --server.address=0.0.0.0'"
