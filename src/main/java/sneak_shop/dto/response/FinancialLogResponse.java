@@ -9,6 +9,7 @@ public record FinancialLogResponse(
         String email,
         Integer usersId,
         Integer addressesId,
+        String addressText,
         Integer ordersId,
         Integer transactionsId,
         Integer productsId,
@@ -22,9 +23,18 @@ public record FinancialLogResponse(
         return new FinancialLogResponse(
                 e.getId(), e.getEmail(),
                 e.getUsersId(), e.getAddressesId(),
+                null,
                 e.getOrdersId(), e.getTransactionsId(),
                 e.getProductsId(), e.getProductsShopId(),
                 e.getAmount(), e.getBankName(), e.getNote(), e.getCreatedAt()
+        );
+    }
+
+    public FinancialLogResponse withAddressText(String addressText) {
+        return new FinancialLogResponse(
+                id, email, usersId, addressesId, addressText,
+                ordersId, transactionsId, productsId, productsShopId,
+                amount, bankName, note, createdAt
         );
     }
 }

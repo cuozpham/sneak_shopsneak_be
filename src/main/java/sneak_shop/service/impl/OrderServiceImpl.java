@@ -211,6 +211,7 @@ public class OrderServiceImpl implements OrderService {
             financialLogRepository.save(FinancialLogEntity.builder()
                     .email(user.getEmail())
                     .usersId(user.getId())
+                    .addressesId(linkedAddress != null ? linkedAddress.getId() : null)
                     .ordersId(order.getId())
                     .transactionsId(transaction.getId())
                     .amount(total.longValueExact())
