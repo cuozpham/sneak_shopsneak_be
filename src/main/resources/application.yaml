@@ -169,3 +169,9 @@ spring:
     hibernate:
       ddl-auto: none
     show-sql: false
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: false
+        temp:
+          use_jdbc_metadata_defaults: false
