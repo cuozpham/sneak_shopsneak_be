@@ -155,6 +155,15 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      initialization-fail-timeout: -1
+      connection-timeout: 10000
+      validation-timeout: 5000
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      max-lifetime: 900000
+      keepalive-time: 120000
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
