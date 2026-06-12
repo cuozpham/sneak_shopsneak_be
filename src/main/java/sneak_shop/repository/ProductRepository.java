@@ -11,13 +11,11 @@ import sneak_shop.entity.ProductEntity;
 import sneak_shop.enums.ProductStatus;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<ProductEntity, Integer> {
     Optional<ProductEntity> findBySlug(String slug);
     boolean existsBySlug(String slug);
-    List<ProductEntity> findByShopIsNullAndDeletedFalse();
 
     @EntityGraph(attributePaths = {"shop"})
     @Query("""
