@@ -48,6 +48,13 @@ public class ReviewController {
         return ApiResponse.ok("Danh gia thanh cong", reviewService.create(ctx.id(), req));
     }
 
+    @PutMapping("/{reviewId}")
+    public ApiResponse<ReviewResponse> update(@AuthenticationPrincipal UserContext ctx,
+                                              @PathVariable Integer reviewId,
+                                              @Valid @RequestBody ReviewRequest req) {
+        return ApiResponse.ok("Cap nhat danh gia thanh cong", reviewService.update(ctx.id(), reviewId, req));
+    }
+
     @PostMapping("/{reviewId}/reply")
     public ApiResponse<ReviewResponse> customerReply(
             @AuthenticationPrincipal UserContext ctx,

@@ -10,6 +10,7 @@ public interface ReviewService {
     PageResponse<ReviewResponse> getByProduct(Integer productId, int page, int size);
     PageResponse<ReviewResponse> getMyReviews(Integer userId, int page, int size);
     ReviewResponse create(Integer userId, ReviewRequest req);
+    ReviewResponse update(Integer userId, Integer reviewId, ReviewRequest req);
     ReviewResponse shopReply(Integer reviewId, ShopReplyRequest req);
     ProductImageEntity saveReviewImage(Integer productId, String imageUrl);
     ReviewResponse customerReply(Integer userId, Integer reviewId, String reply);

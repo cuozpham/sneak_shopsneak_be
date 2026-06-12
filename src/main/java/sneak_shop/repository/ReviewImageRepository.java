@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ReviewImageRepository extends JpaRepository<ReviewImageEntity, Integer> {
     List<ReviewImageEntity> findByReviewId(Integer reviewId);
+    void deleteByReviewId(Integer reviewId);
 }

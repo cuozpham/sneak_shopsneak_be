@@ -25,12 +25,12 @@ public class PublicUploadController {
         if (file.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "File rong"));
 
         String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            return ResponseEntity.badRequest().body(Map.of("error", "Chi chap nhan file anh"));
+        if (contentType == null || (!contentType.startsWith("image/") && !contentType.startsWith("video/"))) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Chi chap nhan file anh hoac video"));
         }
 
-        if (file.getSize() > 5 * 1024 * 1024) {
-            return ResponseEntity.badRequest().body(Map.of("error", "File toi da 5MB"));
+        if (file.getSize() > 20 * 1024 * 1024) {
+            return ResponseEntity.badRequest().body(Map.of("error", "File toi da 20MB"));
         }
 
         Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
@@ -41,7 +41,7 @@ public class PublicUploadController {
         if (original != null && original.contains("."))
             ext = original.substring(original.lastIndexOf("."));
 
-        String filename = "contact_" + UUID.randomUUID() + ext;
+        String filename = "upload_" + UUID.randomUUID() + ext;
         Path dest = dir.resolve(filename);
         java.nio.file.Files.copy(file.getInputStream(), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
 

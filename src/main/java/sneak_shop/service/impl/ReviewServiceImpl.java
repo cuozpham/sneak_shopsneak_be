@@ -19,6 +19,9 @@ import sneak_shop.service.ReviewService;
 import sneak_shop.service.NotificationService;
 
 import java.time.Instant;
+import java.time.Duration;
+import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
@@ -71,6 +74,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     public ReviewResponse create(Integer userId, ReviewRequest req) {
+        validateReviewImages(req.productImageIds());
         if (reviewRepository.existsByOrderItemId(req.orderItemId())) {
             throw new AppException(ErrorCode.CONFLICT, "Ban da danh gia san pham nay roi");
         }
@@ -98,23 +102,13 @@ public class ReviewServiceImpl implements ReviewService {
                 .orderItem(orderItem)
                 .product(product)
                 .shop(shop)
-                .rating(req.rating()).comment(req.comment()).build();
+                .rating(req.rating())
+                .comment(req.comment())
+                .editCount(0)
+                .build();
         review = reviewRepository.save(review);
 
-        if (req.productImageIds() != null && !req.productImageIds().isEmpty()) {
-            ReviewEntity finalReview = review;
-            var images = req.productImageIds().stream().limit(5)
-                    .flatMap(imgId -> productImageRepository.findById(imgId).stream())
-                    .map(pi -> ReviewImageEntity.builder()
-                            .review(finalReview)
-                            .productImage(pi)
-                            .build())
-                    .toList();
-            if (!images.isEmpty()) reviewImageRepository.saveAll(images);
-        }
-
-        review.getImages().clear();
-        review.getImages().addAll(reviewImageRepository.findByReviewId(review.getId()));
+        replaceReviewImages(review, req.productImageIds());
         try {
             notificationService.notifyAdmins(
                     "Co danh gia moi",
@@ -125,6 +119,33 @@ public class ReviewServiceImpl implements ReviewService {
         } catch (Exception ex) {
             log.warn("Failed to notify admins about review {}: {}", review.getId(), ex.getMessage(), ex);
         }
+        return ReviewResponse.from(review);
+    }
+
+    @Transactional
+    public ReviewResponse update(Integer userId, Integer reviewId, ReviewRequest req) {
+        validateReviewImages(req.productImageIds());
+        ReviewEntity review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Review khong ton tai"));
+        if (!review.getUser().getId().equals(userId)) {
+            throw new AppException(ErrorCode.ACCESS_DENIED, "Khong co quyen sua review nay");
+        }
+        if (review.getShopReply() != null) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Da co phan hoi cua shop, khong the sua danh gia");
+        }
+        if (review.getEditCount() != null && review.getEditCount() >= 1) {
+            throw new AppException(ErrorCode.CONFLICT, "Ban chi duoc sua danh gia mot lan");
+        }
+        Instant editableUntil = review.getCreatedAt().plus(Duration.ofHours(24));
+        if (Instant.now().isAfter(editableUntil)) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Chi co the sua danh gia trong 24 gio dau");
+        }
+
+        if (req.rating() != null) review.setRating(req.rating());
+        review.setComment(req.comment());
+        review.setEditCount((review.getEditCount() == null ? 0 : review.getEditCount()) + 1);
+        review = reviewRepository.save(review);
+        replaceReviewImages(review, req.productImageIds());
         return ReviewResponse.from(review);
     }
 
@@ -176,6 +197,36 @@ public class ReviewServiceImpl implements ReviewService {
                 .type("review")
                 .sortOrder(0)
                 .build());
+    }
+
+    private void replaceReviewImages(ReviewEntity review, List<Integer> productImageIds) {
+        if (productImageIds == null) return;
+        reviewImageRepository.deleteByReviewId(review.getId());
+        if (productImageIds.isEmpty()) {
+            review.getImages().clear();
+            return;
+        }
+        List<ReviewImageEntity> images = productImageIds.stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .limit(5)
+                .flatMap(imgId -> productImageRepository.findById(imgId).stream())
+                .map(pi -> ReviewImageEntity.builder()
+                        .review(review)
+                        .productImage(pi)
+                        .build())
+                .toList();
+        if (!images.isEmpty()) {
+            reviewImageRepository.saveAll(images);
+        }
+        review.getImages().clear();
+        review.getImages().addAll(reviewImageRepository.findByReviewId(review.getId()));
+    }
+
+    private void validateReviewImages(List<Integer> productImageIds) {
+        if (productImageIds != null && productImageIds.size() > 5) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Chi duoc toi da 5 anh danh gia");
+        }
     }
 
     @Transactional
