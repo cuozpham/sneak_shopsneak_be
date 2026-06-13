@@ -37,6 +37,11 @@ public class AdminReviewController {
         return ApiResponse.ok(reviewService.getByProduct(productId, page, size));
     }
 
+    @GetMapping("/{reviewId}")
+    public ApiResponse<ReviewResponse> getById(@PathVariable Integer reviewId) {
+        return ApiResponse.ok(reviewService.getById(reviewId));
+    }
+
     @PostMapping("/{reviewId}/reply")
     public ApiResponse<ReviewResponse> reply(@PathVariable Integer reviewId,
                                              @Valid @RequestBody ShopReplyRequest req) {

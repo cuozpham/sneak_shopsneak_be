@@ -9,6 +9,7 @@ import sneak_shop.entity.ProductImageEntity;
 public interface ReviewService {
     PageResponse<ReviewResponse> getByProduct(Integer productId, int page, int size);
     PageResponse<ReviewResponse> getMyReviews(Integer userId, int page, int size);
+    ReviewResponse getById(Integer reviewId);
     ReviewResponse create(Integer userId, ReviewRequest req);
     ReviewResponse update(Integer userId, Integer reviewId, ReviewRequest req);
     ReviewResponse shopReply(Integer reviewId, ShopReplyRequest req);

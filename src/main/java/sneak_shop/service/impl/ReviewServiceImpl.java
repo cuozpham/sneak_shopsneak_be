@@ -73,6 +73,14 @@ public class ReviewServiceImpl implements ReviewService {
                 userId, PageRequest.of(page, size)).map(ReviewResponse::from));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public ReviewResponse getById(Integer reviewId) {
+        return reviewRepository.findById(reviewId)
+                .map(ReviewResponse::from)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Review khong ton tai"));
+    }
+
     @Transactional
     public ReviewResponse create(Integer userId, ReviewRequest req) {
         validateReviewImages(req.productImageIds());
