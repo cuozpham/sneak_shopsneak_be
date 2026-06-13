@@ -1,6 +1,7 @@
 package sneak_shop.controller.admin;
 
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import sneak_shop.common.response.ApiResponse;
@@ -35,4 +36,9 @@ public class AdminShippingFeeController {
         return ApiResponse.ok("Luu phi van chuyen thanh cong", shippingFeeService.save(request));
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Integer id) {
+        shippingFeeService.delete(id);
+    }
 }
