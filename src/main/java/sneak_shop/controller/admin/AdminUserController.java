@@ -3,6 +3,7 @@ package sneak_shop.controller.admin;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -48,6 +49,8 @@ public class AdminUserController {
     record LockRequest(
             @NotBlank @Size(min = 2, max = 500) String reason
     ) {}
+
+    record RoleRequest(@NotNull UserRole role) {}
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -101,6 +104,22 @@ public class AdminUserController {
         user.setFullName(req.fullName());
         user.setPhone(req.phone());
         return ApiResponse.ok("Cap nhat thanh cong", toSummary(userRepository.save(user)));
+    }
+
+    @PatchMapping("/{id}/role")
+    public ApiResponse<UserSummary> updateRole(@PathVariable Integer id,
+                                               @Valid @RequestBody RoleRequest req) {
+        if (req.role() == null)
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Vai tro khong hop le");
+
+        UserEntity user = findUser(id);
+        if (user.getRole() == UserRole.admin && req.role() != UserRole.admin
+                && userRepository.findAllByRoleAndDeletedAtIsNull(UserRole.admin).size() <= 1) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Khong the ha quyen quan tri vien cuoi cung");
+        }
+
+        user.setRole(req.role());
+        return ApiResponse.ok("Cap nhat vai tro thanh cong", toSummary(userRepository.save(user)));
     }
 
     @PatchMapping("/{id}/lock")
