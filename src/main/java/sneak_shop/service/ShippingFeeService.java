@@ -3,10 +3,9 @@ package sneak_shop.service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import sneak_shop.common.exception.AppException;
-import sneak_shop.common.exception.ErrorCode;
 import sneak_shop.common.response.PageResponse;
 import sneak_shop.dto.request.ShippingFeeConfigRequest;
+import sneak_shop.dto.response.CurrentShippingFeeResponse;
 import sneak_shop.dto.response.ShippingFeeConfigResponse;
 import sneak_shop.entity.ShippingFeeConfigEntity;
 import sneak_shop.repository.ShippingFeeConfigRepository;
@@ -31,6 +30,12 @@ public class ShippingFeeService {
     @Transactional(readOnly = true)
     public BigDecimal getCurrentFee() {
         return getFeeFor(YearMonth.now(BUSINESS_ZONE));
+    }
+
+    @Transactional(readOnly = true)
+    public CurrentShippingFeeResponse getCurrent() {
+        YearMonth month = YearMonth.now(BUSINESS_ZONE);
+        return new CurrentShippingFeeResponse(month, getFeeFor(month));
     }
 
     @Transactional(readOnly = true)
@@ -61,11 +66,4 @@ public class ShippingFeeService {
         return ShippingFeeConfigResponse.from(repository.save(entity));
     }
 
-    @Transactional
-    public void delete(Integer id) {
-        if (!repository.existsById(id)) {
-            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Cau hinh phi van chuyen khong ton tai");
-        }
-        repository.deleteById(id);
-    }
 }
