@@ -2,4 +2,8 @@
 buildCommand = "./mvnw clean package -DskipTests"
 
 [deploy]
-startCommand = "sh -c 'exec java -jar target/sneak_shop-0.0.1-SNAPSHOT.jar --server.address=0.0.0.0'"
+startCommand = "sh -c 'exec java -Xms64m -Xmx192m -Xss512k -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -XX:+ExitOnOutOfMemoryError -jar target/sneak_shop-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod --server.address=0.0.0.0'"
+healthcheckPath = "/"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
