@@ -37,7 +37,7 @@ public class AdminProductController {
 
     @GetMapping("/{id}")
     public ApiResponse<ProductResponse> getById(@PathVariable Integer id) {
-        return ApiResponse.ok(productService.getById(id));
+        return ApiResponse.ok(productService.getByIdForAdmin(id));
     }
 
     @PostMapping
