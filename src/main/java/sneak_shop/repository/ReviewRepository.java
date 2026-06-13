@@ -13,6 +13,7 @@ import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<ReviewEntity, Integer> {
     Page<ReviewEntity> findByProductIdOrderByCreatedAtDesc(Integer productId, Pageable pageable);
+    List<ReviewEntity> findAllByProductId(Integer productId);
     Page<ReviewEntity> findByUserIdOrderByCreatedAtDesc(Integer userId, Pageable pageable);
     boolean existsByOrderItemId(Integer orderItemId);
     Optional<ReviewEntity> findByOrderItemId(Integer orderItemId);
