@@ -42,5 +42,5 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Integer> {
     @Query("SELECT COALESCE(AVG(r.rating), 0) FROM ReviewEntity r")
     Double avgRatingAll();
 
-    Page<ReviewEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    Page<ReviewEntity> findByProductDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
 }

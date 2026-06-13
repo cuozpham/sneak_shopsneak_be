@@ -56,7 +56,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> getAll(int page, int size) {
-        return PageResponse.from(reviewRepository.findAllByOrderByCreatedAtDesc(
+        return PageResponse.from(reviewRepository.findByProductDeletedFalseOrderByCreatedAtDesc(
                 PageRequest.of(page, size)).map(ReviewResponse::from));
     }
 
