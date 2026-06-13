@@ -101,6 +101,13 @@ public class ProductServiceImpl implements ProductService {
         return toFullResponse(product, loadMetricsContext(List.of(product)));
     }
 
+    @Transactional(readOnly = true)
+    public ProductResponse getByIdForAdmin(Integer id) {
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
+        return toFullResponse(product, loadMetricsContext(List.of(product)));
+    }
+
     @Transactional
     public ProductResponse create(ProductRequest req) {
         String slug = uniqueSlug(toSlug(req.name()));
@@ -169,7 +176,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public PageResponse<ProductResponse> adminSearch(String keyword, ProductStatus status, Boolean deleted, int page, int size) {
         Page<ProductEntity> pageResult = productRepository.adminSearch(
-                deleted, status, keyword,
+                Boolean.TRUE.equals(deleted), status, keyword,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());

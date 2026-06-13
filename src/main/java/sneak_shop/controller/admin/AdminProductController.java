@@ -28,7 +28,7 @@ public class AdminProductController {
     public ApiResponse<PageResponse<ProductResponse>> search(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) ProductStatus status,
-            @RequestParam(required = false) Boolean deleted,
+            @RequestParam(defaultValue = "false") Boolean deleted,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
@@ -37,7 +37,7 @@ public class AdminProductController {
 
     @GetMapping("/{id}")
     public ApiResponse<ProductResponse> getById(@PathVariable Integer id) {
-        return ApiResponse.ok(productService.getById(id));
+        return ApiResponse.ok(productService.getByIdForAdmin(id));
     }
 
     @PostMapping
@@ -57,7 +57,7 @@ public class AdminProductController {
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('PRODUCT_DELETE')")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
         productService.delete(id);
-        return ApiResponse.ok("Xoa san pham thanh cong");
+        return ApiResponse.ok("Da chuyen san pham vao thung rac");
     }
 
     @PatchMapping("/{id}/restore")

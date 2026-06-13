@@ -13,6 +13,7 @@ public interface ProductService {
                                          Integer categoryId, ProductStatus status, int page, int size, String sort);
     ProductResponse getBySlug(String slug);
     ProductResponse getById(Integer id);
+    ProductResponse getByIdForAdmin(Integer id);
     ProductResponse create(ProductRequest req);
     ProductResponse update(Integer id, ProductRequest req);
     PageResponse<ProductResponse> adminSearch(String keyword, ProductStatus status, Boolean deleted, int page, int size);

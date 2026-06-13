@@ -1,12 +1,10 @@
 package sneak_shop.controller;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import sneak_shop.common.exception.AppException;
 import sneak_shop.common.exception.ErrorCode;
 import sneak_shop.common.response.ApiResponse;
@@ -15,27 +13,22 @@ import sneak_shop.entity.UserEntity;
 import sneak_shop.enums.UserGender;
 import sneak_shop.repository.UserRepository;
 import sneak_shop.security.UserContext;
+import sneak_shop.service.CloudinaryStorageService;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.Instant;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/user")
 public class UserProfileController {
 
     private final UserRepository userRepository;
+    private final CloudinaryStorageService storageService;
 
-    @Value("${app.upload.dir:uploads/images}")
-    private String uploadDir;
-
-    public UserProfileController(UserRepository userRepository) {
+    public UserProfileController(UserRepository userRepository, CloudinaryStorageService storageService) {
         this.userRepository = userRepository;
+        this.storageService = storageService;
     }
 
     @GetMapping("/me")
@@ -84,23 +77,8 @@ public class UserProfileController {
     public ResponseEntity<Map<String, String>> uploadAvatar(
             @AuthenticationPrincipal UserContext ctx,
             @RequestParam("file") MultipartFile file
-    ) throws IOException {
-        if (file.isEmpty()) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "File khong hop le");
-        }
-        Path dir = Paths.get(uploadDir);
-        Files.createDirectories(dir);
-        String ext = "";
-        String original = file.getOriginalFilename();
-        if (original != null && original.contains("."))
-            ext = original.substring(original.lastIndexOf("."));
-        String filename = "avatar_" + ctx.id() + "_" + UUID.randomUUID() + ext;
-        file.transferTo(dir.resolve(filename));
-        String url = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/images/")
-                .path(filename)
-                .toUriString();
-
+    ) {
+        String url = storageService.uploadAvatar(file, ctx.id());
         UserEntity user = userRepository.findById(ctx.id())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "User khong ton tai"));
         user.setAvatarUrl(url);
