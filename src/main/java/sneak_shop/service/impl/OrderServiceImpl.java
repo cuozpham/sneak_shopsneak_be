@@ -18,6 +18,7 @@ import sneak_shop.repository.*;
 import sneak_shop.service.OrderService;
 import sneak_shop.service.NotificationService;
 import sneak_shop.service.MomoPaymentService;
+import sneak_shop.service.ShippingFeeService;
 import sneak_shop.service.ZaloPayPaymentService;
 import sneak_shop.websocket.RealtimeSocketHub;
 
@@ -44,6 +45,7 @@ public class OrderServiceImpl implements OrderService {
     private final TransactionRepository transactionRepository;
     private final FinancialLogRepository financialLogRepository;
     private final NotificationService notificationService;
+    private final ShippingFeeService shippingFeeService;
     private final MomoPaymentService momoPaymentService;
     private final ZaloPayPaymentService zaloPayPaymentService;
     private final RealtimeSocketHub realtimeSocketHub;
@@ -58,6 +60,7 @@ public class OrderServiceImpl implements OrderService {
                             TransactionRepository transactionRepository,
                             FinancialLogRepository financialLogRepository,
                             NotificationService notificationService,
+                            ShippingFeeService shippingFeeService,
                             MomoPaymentService momoPaymentService,
                             ZaloPayPaymentService zaloPayPaymentService,
                             RealtimeSocketHub realtimeSocketHub) {
@@ -75,6 +78,7 @@ public class OrderServiceImpl implements OrderService {
         this.transactionRepository = transactionRepository;
         this.financialLogRepository = financialLogRepository;
         this.notificationService = notificationService;
+        this.shippingFeeService = shippingFeeService;
         this.momoPaymentService = momoPaymentService;
         this.zaloPayPaymentService = zaloPayPaymentService;
         this.realtimeSocketHub = realtimeSocketHub;
@@ -117,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal shippingFee = subtotal.compareTo(new BigDecimal("500000")) >= 0
-                ? BigDecimal.ZERO : new BigDecimal("30000");
+                ? BigDecimal.ZERO : shippingFeeService.getCurrentFee();
         BigDecimal total = subtotal.add(shippingFee);
         ProductShopEntity orderShop = resolveOrderShop(items);
 
