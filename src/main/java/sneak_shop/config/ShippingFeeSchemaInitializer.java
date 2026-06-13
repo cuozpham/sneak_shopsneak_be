@@ -38,8 +38,10 @@ public class ShippingFeeSchemaInitializer implements ApplicationRunner {
                     WHERE NOT EXISTS (SELECT 1 FROM shipping_fee_configs)
                     """);
         } catch (Exception exception) {
-            log.error("Cannot initialize shipping fee configuration table", exception);
-            throw exception;
+            log.warn(
+                    "Shipping fee table initialization was deferred because the database is not ready: {}",
+                    exception.getMessage()
+            );
         }
     }
 }
