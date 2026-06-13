@@ -165,11 +165,14 @@ spring:
       initialization-fail-timeout: -1
       connection-timeout: 10000
       validation-timeout: 5000
-      maximum-pool-size: 10
-      minimum-idle: 2
+      maximum-pool-size: 5
+      minimum-idle: 0
       idle-timeout: 300000
       max-lifetime: 900000
       keepalive-time: 120000
+  threads:
+    virtual:
+      enabled: true
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
@@ -181,3 +184,9 @@ spring:
           allow_jdbc_metadata_access: false
         temp:
           use_jdbc_metadata_defaults: false
+
+server:
+  tomcat:
+    threads:
+      max: 24
+      min-spare: 2
