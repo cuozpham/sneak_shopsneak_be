@@ -12,9 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<ReviewEntity, Integer> {
-    Page<ReviewEntity> findByProductIdOrderByCreatedAtDesc(Integer productId, Pageable pageable);
-    List<ReviewEntity> findAllByProductId(Integer productId);
-    Page<ReviewEntity> findByUserIdOrderByCreatedAtDesc(Integer userId, Pageable pageable);
+    Page<ReviewEntity> findByProductIdAndProductDeletedFalseOrderByCreatedAtDesc(Integer productId, Pageable pageable);
+    Page<ReviewEntity> findByUserIdAndProductDeletedFalseOrderByCreatedAtDesc(Integer userId, Pageable pageable);
     boolean existsByOrderItemId(Integer orderItemId);
     Optional<ReviewEntity> findByOrderItemId(Integer orderItemId);
 
@@ -44,4 +43,5 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Integer> {
     Double avgRatingAll();
 
     Page<ReviewEntity> findByProductDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
+    Optional<ReviewEntity> findByIdAndProductDeletedFalse(Integer id);
 }

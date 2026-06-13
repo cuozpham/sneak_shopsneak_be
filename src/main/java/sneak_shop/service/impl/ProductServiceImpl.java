@@ -46,9 +46,8 @@ public class ProductServiceImpl implements ProductService {
     private final ProductImageRepository imageRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
-    private final ReviewRepository reviewRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository, ProductShopRepository shopRepository, ProductCategoryRepository categoryRepository, ProductCategoryMappingRepository mappingRepository, ProductVariantRepository variantRepository, ProductVariantColorRepository colorRepository, ProductImageRepository imageRepository, OrderItemRepository orderItemRepository, CartItemRepository cartItemRepository, ReviewRepository reviewRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, ProductShopRepository shopRepository, ProductCategoryRepository categoryRepository, ProductCategoryMappingRepository mappingRepository, ProductVariantRepository variantRepository, ProductVariantColorRepository colorRepository, ProductImageRepository imageRepository, OrderItemRepository orderItemRepository, CartItemRepository cartItemRepository) {
         this.productRepository = productRepository;
         this.shopRepository = shopRepository;
         this.categoryRepository = categoryRepository;
@@ -58,7 +57,6 @@ public class ProductServiceImpl implements ProductService {
         this.imageRepository = imageRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartItemRepository = cartItemRepository;
-        this.reviewRepository = reviewRepository;
     }
 
     @Transactional(readOnly = true)
@@ -170,7 +168,6 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity product = productRepository.findById(id)
                 .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
-        reviewRepository.deleteAll(reviewRepository.findAllByProductId(id));
         product.setDeleted(true);
         product.setUpdatedBy(currentUser());
         productRepository.save(product);

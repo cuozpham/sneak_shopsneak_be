@@ -62,21 +62,21 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> getByProduct(Integer productId, int page, int size) {
-        return PageResponse.from(reviewRepository.findByProductIdOrderByCreatedAtDesc(
+        return PageResponse.from(reviewRepository.findByProductIdAndProductDeletedFalseOrderByCreatedAtDesc(
                 productId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")))
                 .map(ReviewResponse::from));
     }
 
     @Transactional(readOnly = true)
     public PageResponse<ReviewResponse> getMyReviews(Integer userId, int page, int size) {
-        return PageResponse.from(reviewRepository.findByUserIdOrderByCreatedAtDesc(
+        return PageResponse.from(reviewRepository.findByUserIdAndProductDeletedFalseOrderByCreatedAtDesc(
                 userId, PageRequest.of(page, size)).map(ReviewResponse::from));
     }
 
     @Override
     @Transactional(readOnly = true)
     public ReviewResponse getById(Integer reviewId) {
-        return reviewRepository.findById(reviewId)
+        return reviewRepository.findByIdAndProductDeletedFalse(reviewId)
                 .map(ReviewResponse::from)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Review khong ton tai"));
     }
@@ -98,6 +98,7 @@ public class ReviewServiceImpl implements ReviewService {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chi co the danh gia don hang da hoan thanh");
         }
         ProductEntity product = productRepository.findById(orderItem.getProduct().getId())
+                .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
         ProductShopEntity shop = resolveReviewShop(orderItem, product);
         if (shop == null || shop.getId() == null) {
@@ -133,7 +134,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public ReviewResponse update(Integer userId, Integer reviewId, ReviewRequest req) {
         validateReviewImages(req.productImageIds());
-        ReviewEntity review = reviewRepository.findById(reviewId)
+        ReviewEntity review = reviewRepository.findByIdAndProductDeletedFalse(reviewId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Review khong ton tai"));
         if (!review.getUser().getId().equals(userId)) {
             throw new AppException(ErrorCode.ACCESS_DENIED, "Khong co quyen sua review nay");
@@ -179,7 +180,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     public ReviewResponse shopReply(Integer reviewId, ShopReplyRequest req) {
-        ReviewEntity review = reviewRepository.findById(reviewId)
+        ReviewEntity review = reviewRepository.findByIdAndProductDeletedFalse(reviewId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Review khong ton tai"));
         review.setShopReply(req.reply());
         review.setShopReplyAt(Instant.now());
@@ -197,6 +198,7 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public ProductImageEntity saveReviewImage(Integer productId, String imageUrl) {
         ProductEntity product = productRepository.findById(productId)
+                .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
         return productImageRepository.save(ProductImageEntity.builder()
                 .product(product)
@@ -242,7 +244,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Transactional
     public ReviewResponse customerReply(Integer userId, Integer reviewId, String reply) {
-        ReviewEntity review = reviewRepository.findById(reviewId)
+        ReviewEntity review = reviewRepository.findByIdAndProductDeletedFalse(reviewId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Review khong ton tai"));
         if (!review.getUser().getId().equals(userId)) {
             throw new AppException(ErrorCode.ACCESS_DENIED, "Khong co quyen sua review nay");
