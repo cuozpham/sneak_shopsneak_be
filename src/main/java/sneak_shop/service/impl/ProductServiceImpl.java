@@ -71,24 +71,14 @@ public class ProductServiceImpl implements ProductService {
             String keyword, BigDecimal minPrice, BigDecimal maxPrice,
             Integer categoryId, ProductStatus status, int page, int size, String sort
     ) {
-        if ("sold".equals(sort) || "rating".equals(sort)) {
-            String statusStr = status != null ? status.name() : null;
-            Page<ProductEntity> pageResult = "sold".equals(sort)
-                    ? productRepository.searchSortBySold(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size))
-                    : productRepository.searchSortByRating(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
-            Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
-            ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
-            return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, metrics)));
-        }
-        Sort sortSpec = switch (sort) {
-            case "price_asc" -> Sort.by(Sort.Direction.ASC, "price");
-            case "price_desc" -> Sort.by(Sort.Direction.DESC, "price");
-            default -> Sort.by(Sort.Direction.DESC, "createdAt");
+        String statusStr = status != null ? status.name() : null;
+        Page<ProductEntity> pageResult = switch (sort) {
+            case "price_asc" -> productRepository.searchPriceAsc(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
+            case "price_desc" -> productRepository.searchPriceDesc(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
+            case "sold" -> productRepository.searchSortBySold(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
+            case "rating" -> productRepository.searchSortByRating(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
+            default -> productRepository.searchNewest(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
         };
-        Page<ProductEntity> pageResult = productRepository.search(
-                status, minPrice, maxPrice, keyword, categoryId,
-                PageRequest.of(page, size, sortSpec)
-        );
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
         ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
         return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, metrics)));

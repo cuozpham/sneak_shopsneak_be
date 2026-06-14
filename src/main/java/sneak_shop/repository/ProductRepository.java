@@ -17,21 +17,92 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
     Optional<ProductEntity> findBySlug(String slug);
     boolean existsBySlug(String slug);
 
-    @EntityGraph(attributePaths = {"shop"})
-    @Query("""
-            SELECT p FROM ProductEntity p
-            WHERE p.deleted = false
+    @Query(value = """
+            SELECT DISTINCT p.* FROM products p
+            LEFT JOIN product_category_mappings m ON m.product_id = p.id
+            WHERE p.is_deleted = false
               AND (:status IS NULL OR p.status = :status)
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR EXISTS (
-                  SELECT m FROM ProductCategoryMappingEntity m
-                  WHERE m.product = p AND m.category.id = :categoryId
-              ))
-            """)
-    Page<ProductEntity> search(
-            @Param("status") ProductStatus status,
+              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+            ORDER BY p.created_at DESC, p.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(DISTINCT p.id) FROM products p
+            LEFT JOIN product_category_mappings m ON m.product_id = p.id
+            WHERE p.is_deleted = false
+              AND (:status IS NULL OR p.status = :status)
+              AND (:minPrice IS NULL OR p.price >= :minPrice)
+              AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+              AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+            """,
+            nativeQuery = true)
+    Page<ProductEntity> searchNewest(
+            @Param("status") String status,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            @Param("keyword") String keyword,
+            @Param("categoryId") Integer categoryId,
+            Pageable pageable
+    );
+
+    @Query(value = """
+            SELECT DISTINCT p.* FROM products p
+            LEFT JOIN product_category_mappings m ON m.product_id = p.id
+            WHERE p.is_deleted = false
+              AND (:status IS NULL OR p.status = :status)
+              AND (:minPrice IS NULL OR p.price >= :minPrice)
+              AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+              AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+            ORDER BY p.price ASC, p.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(DISTINCT p.id) FROM products p
+            LEFT JOIN product_category_mappings m ON m.product_id = p.id
+            WHERE p.is_deleted = false
+              AND (:status IS NULL OR p.status = :status)
+              AND (:minPrice IS NULL OR p.price >= :minPrice)
+              AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+              AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+            """,
+            nativeQuery = true)
+    Page<ProductEntity> searchPriceAsc(
+            @Param("status") String status,
+            @Param("minPrice") BigDecimal minPrice,
+            @Param("maxPrice") BigDecimal maxPrice,
+            @Param("keyword") String keyword,
+            @Param("categoryId") Integer categoryId,
+            Pageable pageable
+    );
+
+    @Query(value = """
+            SELECT DISTINCT p.* FROM products p
+            LEFT JOIN product_category_mappings m ON m.product_id = p.id
+            WHERE p.is_deleted = false
+              AND (:status IS NULL OR p.status = :status)
+              AND (:minPrice IS NULL OR p.price >= :minPrice)
+              AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+              AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+            ORDER BY p.price DESC, p.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(DISTINCT p.id) FROM products p
+            LEFT JOIN product_category_mappings m ON m.product_id = p.id
+            WHERE p.is_deleted = false
+              AND (:status IS NULL OR p.status = :status)
+              AND (:minPrice IS NULL OR p.price >= :minPrice)
+              AND (:maxPrice IS NULL OR p.price <= :maxPrice)
+              AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+            """,
+            nativeQuery = true)
+    Page<ProductEntity> searchPriceDesc(
+            @Param("status") String status,
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("keyword") String keyword,
