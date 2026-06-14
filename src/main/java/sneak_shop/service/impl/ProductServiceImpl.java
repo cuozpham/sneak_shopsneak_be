@@ -387,7 +387,7 @@ public class ProductServiceImpl implements ProductService {
                 List.of(),
                 ratingAverage,
                 reviewCount,
-                0L,
+                metrics.soldCountByProductId().getOrDefault(productId, 0L),
                 product.isDeleted());
     }
 
