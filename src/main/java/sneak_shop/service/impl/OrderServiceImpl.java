@@ -351,13 +351,19 @@ public class OrderServiceImpl implements OrderService {
         updateStatus(order, OrderStatus.cancelled, reason);
         order.setCancelReason(reason);
         order.setCancelledAt(Instant.now());
+        boolean needsRefund = order.getPaymentStatus() == PaymentStatus.paid;
+        if (needsRefund) {
+            order.setPaymentStatus(PaymentStatus.refunded);
+        }
         order = orderRepository.save(order);
         String cancelReasonText = (reason != null && !reason.isBlank()) ? reason : "Không có lý do";
+        String refundAdminText = needsRefund ? " Vui lòng hoàn tiền lại cho người dùng." : "";
+        String refundUserText = needsRefund ? " Vui lòng liên hệ lại với người bán để được hoàn tiền." : "";
         notificationService.notifyAdmins(order, "Đơn hàng đã bị hủy",
-                "Đơn hàng " + order.getOrderCode() + " vừa bị hủy. Lý do: " + cancelReasonText,
+                "Đơn hàng " + order.getOrderCode() + " vừa bị hủy." + refundAdminText + " Lý do: " + cancelReasonText,
                 "order_cancelled", null);
         notificationService.notifyUser(userId, order, "Đơn hàng đã bị hủy",
-                "Đơn hàng " + order.getOrderCode() + " đã được hủy. Lý do: " + cancelReasonText,
+                "Đơn hàng " + order.getOrderCode() + " đã được hủy." + refundUserText + " Lý do: " + cancelReasonText,
                 "order_cancelled", null);
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_status_changed"));
         return toResponse(order);
@@ -426,12 +432,18 @@ public class OrderServiceImpl implements OrderService {
         if (req.status() == OrderStatus.cancelled) {
             order.setCancelledAt(Instant.now());
             order.setCancelReason(req.cancelReason());
+            boolean needsRefund = order.getPaymentStatus() == PaymentStatus.paid;
+            if (needsRefund) {
+                order.setPaymentStatus(PaymentStatus.refunded);
+            }
             restoreStock(order);
         }
         order = orderRepository.save(order);
+        boolean needsRefund = req.status() == OrderStatus.cancelled && order.getPaymentStatus() == PaymentStatus.refunded;
         notificationService.notifyUser(order.getUser().getId(), order,
                 "Cập nhật trạng thái đơn hàng",
-                "Đơn hàng " + order.getOrderCode() + " đã chuyển sang trạng thái " + readableStatus(req.status()) + ".",
+                "Đơn hàng " + order.getOrderCode() + " đã chuyển sang trạng thái " + readableStatus(req.status()) + "."
+                        + (needsRefund ? " Vui lòng liên hệ lại với người bán để được hoàn tiền." : ""),
                 "order_status", null);
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_status_changed"));
         return toResponse(order);
@@ -491,7 +503,7 @@ public class OrderServiceImpl implements OrderService {
         if (req.status() == OrderStatus.cancelled) {
             return "Admin huy don hang" + (req.cancelReason() != null && !req.cancelReason().isBlank()
                     ? ": " + req.cancelReason().trim()
-                    : "");
+                    : "") + " - Vui long hoan tien lai cho nguoi dung";
         }
         return "Admin cap nhat sang trang thai " + readableStatus(req.status());
     }
