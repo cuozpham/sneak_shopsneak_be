@@ -29,6 +29,7 @@ public record OrderResponse(
         String note,
         String cancelReason,
         Instant paidAt,
+        Instant completedAt,
         Instant cancelledAt,
         Instant createdAt,
         Instant updatedAt,
@@ -73,7 +74,8 @@ public record OrderResponse(
                 e.getShippingAddress(), e.getShippingCity(),
                 e.getSubtotal(), e.getShippingFee(), e.getDiscountAmount(), e.getTotalAmount(),
                 e.getPaymentMethod(), e.getPaymentStatus(), e.getStatus(),
-                e.getNote(), e.getCancelReason(), e.getPaidAt(), e.getCancelledAt(), e.getCreatedAt(), e.getUpdatedAt(),
+                e.getNote(), e.getCancelReason(), e.getPaidAt(), e.getCompletedAt(), e.getCancelledAt(),
+                e.getCreatedAt(), e.getUpdatedAt(),
                 items.stream().map(OrderItemSummary::from).toList(),
                 transactions.stream().map(TransactionSummary::from).toList()
         );

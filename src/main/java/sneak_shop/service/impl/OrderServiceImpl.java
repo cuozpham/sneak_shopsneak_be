@@ -181,19 +181,12 @@ public class OrderServiceImpl implements OrderService {
 
         historyRepository.save(OrderStatusHistoryEntity.builder()
                 .order(order).toStatus(OrderStatus.pending).note("Don hang duoc tao").build());
-        notificationService.notifyAdmins(
-                "Don hang moi",
-                "Don hang " + order.getOrderCode() + " vua duoc tao.",
-                "order_new",
-                null
-        );
-        notificationService.notifyUser(
-                userId,
-                "Đặt hàng thành công",
+        notificationService.notifyAdmins(order, "Đơn hàng mới",
+                "Đơn hàng " + order.getOrderCode() + " vừa được tạo.",
+                "order_new", null);
+        notificationService.notifyUser(userId, order, "Đặt hàng thành công",
                 "Đơn hàng " + order.getOrderCode() + " đã được tiếp nhận.",
-                "order_created",
-                null
-        );
+                "order_created", null);
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_created"));
 
         if (!isBuyNow) {
@@ -328,19 +321,12 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason(reason);
         order.setCancelledAt(Instant.now());
         order = orderRepository.save(order);
-        notificationService.notifyAdmins(
-                "Don hang da bi huy",
-                "Don hang " + order.getOrderCode() + " vua bi huy.",
-                "order_cancelled",
-                null
-        );
-        notificationService.notifyUser(
-                userId,
-                "Đơn hàng đã bị hủy",
+        notificationService.notifyAdmins(order, "Đơn hàng đã bị hủy",
+                "Đơn hàng " + order.getOrderCode() + " vừa bị hủy.",
+                "order_cancelled", null);
+        notificationService.notifyUser(userId, order, "Đơn hàng đã bị hủy",
                 "Đơn hàng " + order.getOrderCode() + " đã được hủy.",
-                "order_cancelled",
-                null
-        );
+                "order_cancelled", null);
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_status_changed"));
         return toResponse(order);
     }
@@ -365,19 +351,12 @@ public class OrderServiceImpl implements OrderService {
             order.setPaidAt(Instant.now());
         }
         order = orderRepository.save(order);
-        notificationService.notifyAdmins(
-                "Khach da xac nhan nhan hang",
-                "Don hang " + order.getOrderCode() + " da duoc xac nhan da nhan.",
-                "order_received",
-                null
-        );
-        notificationService.notifyUser(
-                userId,
-                "Đã ghi nhận đơn hàng",
+        notificationService.notifyAdmins(order, "Khách đã xác nhận nhận hàng",
+                "Đơn hàng " + order.getOrderCode() + " đã được xác nhận đã nhận.",
+                "order_received", null);
+        notificationService.notifyUser(userId, order, "Đã ghi nhận đơn hàng",
                 "Đơn hàng " + order.getOrderCode() + " đã được đánh dấu hoàn thành.",
-                "order_received",
-                null
-        );
+                "order_received", null);
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_status_changed"));
         return toResponse(order);
     }
@@ -418,13 +397,10 @@ public class OrderServiceImpl implements OrderService {
             restoreStock(order);
         }
         order = orderRepository.save(order);
-        notificationService.notifyUser(
-                order.getUser().getId(),
+        notificationService.notifyUser(order.getUser().getId(), order,
                 "Cập nhật trạng thái đơn hàng",
                 "Đơn hàng " + order.getOrderCode() + " đã chuyển sang trạng thái " + readableStatus(req.status()) + ".",
-                "order_status",
-                null
-        );
+                "order_status", null);
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_status_changed"));
         return toResponse(order);
     }

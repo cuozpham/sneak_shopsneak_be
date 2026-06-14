@@ -10,11 +10,14 @@ public record NotificationResponse(
         String body,
         String imageUrl,
         String type,
+        String orderCode,
         boolean isRead,
         Instant createdAt
 ) {
     public static NotificationResponse from(NotificationEntity e) {
         return new NotificationResponse(e.getId(), e.getTitle(), e.getBody(),
-                e.getImageUrl(), e.getType(), e.getIsRead(), e.getCreatedAt());
+                e.getImageUrl(), e.getType(),
+                e.getOrder() != null ? e.getOrder().getOrderCode() : null,
+                e.getIsRead(), e.getCreatedAt());
     }
 }

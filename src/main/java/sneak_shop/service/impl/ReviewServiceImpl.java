@@ -28,6 +28,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     private static final Logger log = LoggerFactory.getLogger(ReviewServiceImpl.class);
     private static final String EDIT_MARKER = "\u0001EDITED_ONCE\u0001";
+    private static final Duration REVIEW_WINDOW = Duration.ofDays(7);
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
@@ -97,6 +98,12 @@ public class ReviewServiceImpl implements ReviewService {
         if (orderItem.getOrder().getStatus() != OrderStatus.completed) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chi co the danh gia don hang da hoan thanh");
         }
+        Instant completedAt = orderItem.getOrder().getCompletedAt() != null
+                ? orderItem.getOrder().getCompletedAt()
+                : orderItem.getOrder().getUpdatedAt();
+        if (completedAt == null || Instant.now().isAfter(completedAt.plus(REVIEW_WINDOW))) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Da het han danh gia 7 ngay ke tu khi don hang hoan thanh");
+        }
         ProductEntity product = productRepository.findById(orderItem.getProduct().getId())
                 .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
@@ -120,8 +127,9 @@ public class ReviewServiceImpl implements ReviewService {
         replaceReviewImages(review, req.productImageIds());
         try {
             notificationService.notifyAdmins(
-                    "Co danh gia moi",
-                    "San pham " + product.getName() + " vua co mot danh gia moi.",
+                    orderItem.getOrder(),
+                    "Có đánh giá mới",
+                    "Sản phẩm " + product.getName() + " vừa có một đánh giá mới.",
                     "review_new",
                     null
             );
@@ -187,6 +195,7 @@ public class ReviewServiceImpl implements ReviewService {
         review = reviewRepository.save(review);
         notificationService.notifyUser(
                 review.getUser().getId(),
+                review.getOrderItem() != null ? review.getOrderItem().getOrder() : null,
                 "Shop đã phản hồi",
                 "Shop vừa phản hồi đánh giá của bạn cho sản phẩm " + review.getProduct().getName() + ".",
                 "review_reply",
@@ -254,6 +263,15 @@ public class ReviewServiceImpl implements ReviewService {
         }
         review.setReply(reply);
         review.setReplyAt(Instant.now());
-        return ReviewResponse.from(reviewRepository.save(review));
+        review = reviewRepository.save(review);
+        notificationService.notifyUser(
+                userId,
+                review.getOrderItem() != null ? review.getOrderItem().getOrder() : null,
+                "Shop đã nhắn lại",
+                "Shop đã gửi tin nhắn mới về đánh giá của bạn cho sản phẩm " + review.getProduct().getName() + ".",
+                "review_customer_reply",
+                null
+        );
+        return ReviewResponse.from(review);
     }
 }

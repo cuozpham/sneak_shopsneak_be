@@ -88,6 +88,11 @@ public class ChatController {
         return ApiResponse.ok(messages);
     }
 
+    @GetMapping("/unread-count")
+    public ApiResponse<Map<String, Long>> unreadCount(@AuthenticationPrincipal UserContext ctx) {
+        return ApiResponse.ok(Map.of("count", chatRepository.countUnreadAdminMessagesForUser(ctx.id())));
+    }
+
     @PostMapping("/{orderCode}")
     @Transactional
     public ApiResponse<ChatMessageResponse> sendMessage(

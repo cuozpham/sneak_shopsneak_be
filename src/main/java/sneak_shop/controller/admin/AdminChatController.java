@@ -10,6 +10,7 @@ import sneak_shop.entity.ChatMessageEntity;
 import sneak_shop.entity.OrderEntity;
 import sneak_shop.repository.ChatRepository;
 import sneak_shop.repository.OrderRepository;
+import sneak_shop.service.NotificationService;
 import sneak_shop.websocket.RealtimeSocketHub;
 
 import java.time.Instant;
@@ -54,13 +55,16 @@ public class AdminChatController {
 
     private final ChatRepository chatRepository;
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
     private final RealtimeSocketHub realtimeSocketHub;
 
     public AdminChatController(ChatRepository chatRepository,
                                OrderRepository orderRepository,
+                               NotificationService notificationService,
                                RealtimeSocketHub realtimeSocketHub) {
         this.chatRepository = chatRepository;
         this.orderRepository = orderRepository;
+        this.notificationService = notificationService;
         this.realtimeSocketHub = realtimeSocketHub;
     }
 
@@ -111,9 +115,19 @@ public class AdminChatController {
 
         ChatMessageEntity saved = chatRepository.save(msg);
         Integer targetUserId = resolveTargetUserId(orderCode);
+        OrderEntity order = resolveOrder(orderCode);
         realtimeSocketHub.afterCommit(() -> {
             if (targetUserId != null) {
                 realtimeSocketHub.pushChatMessageToUser(targetUserId, saved);
+                notificationService.notifyUser(
+                        targetUserId,
+                        order,
+                        "Tin nhắn mới từ shop",
+                        "Shop vừa gửi cho bạn một tin nhắn mới."
+                                + (order != null ? " Đơn hàng: " + order.getOrderCode() + "." : ""),
+                        "chat_message",
+                        null
+                );
             }
             realtimeSocketHub.pushChatMessageToAdmins(saved);
         });
@@ -130,6 +144,13 @@ public class AdminChatController {
         }
         OrderEntity order = orderRepository.findByOrderCode(orderCode).orElse(null);
         return order != null ? order.getUser().getId() : null;
+    }
+
+    private OrderEntity resolveOrder(String orderCode) {
+        if (orderCode == null || orderCode.startsWith("SUPPORT-")) {
+            return null;
+        }
+        return orderRepository.findByOrderCode(orderCode).orElse(null);
     }
 
     @GetMapping("/unread-count")

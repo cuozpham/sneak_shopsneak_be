@@ -9,6 +9,7 @@ import sneak_shop.common.exception.ErrorCode;
 import sneak_shop.common.response.PageResponse;
 import sneak_shop.dto.response.NotificationResponse;
 import sneak_shop.entity.NotificationEntity;
+import sneak_shop.entity.OrderEntity;
 import sneak_shop.entity.UserEntity;
 import sneak_shop.repository.NotificationRepository;
 import sneak_shop.repository.UserRepository;
@@ -58,11 +59,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Transactional
-    public void notifyUser(Integer userId, String title, String body, String type, String imageUrl) {
+    public void notifyUser(Integer userId, OrderEntity order, String title, String body, String type, String imageUrl) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Nguoi dung khong ton tai"));
         NotificationEntity saved = notificationRepository.save(NotificationEntity.builder()
                 .user(user)
+                .order(order)
                 .title(title)
                 .body(body)
                 .type(type != null ? type : "system")
@@ -74,12 +76,13 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Transactional
-    public void notifyAdmins(String title, String body, String type, String imageUrl) {
+    public void notifyAdmins(OrderEntity order, String title, String body, String type, String imageUrl) {
         var admins = userRepository.findAllByRoleAndDeletedAtIsNull(UserRole.admin);
         if (admins.isEmpty()) return;
         for (UserEntity admin : admins) {
             NotificationEntity saved = notificationRepository.save(NotificationEntity.builder()
                     .user(admin)
+                    .order(order)
                     .title(title)
                     .body(body)
                     .type(type != null ? type : "system")

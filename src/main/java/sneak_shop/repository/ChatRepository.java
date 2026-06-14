@@ -12,6 +12,18 @@ public interface ChatRepository extends JpaRepository<ChatMessageEntity, Integer
 
     long countByIsReadFalseAndSenderRole(String senderRole);
 
+    @Query(value = """
+            SELECT COUNT(*)
+            FROM chat_messages c
+            WHERE c.is_read = 0
+              AND c.sender_role = 'ADMIN'
+              AND (
+                    c.order_code = CONCAT('SUPPORT-', :userId)
+                    OR c.order_code IN (SELECT o.order_code FROM orders o WHERE o.user_id = :userId)
+                  )
+            """, nativeQuery = true)
+    long countUnreadAdminMessagesForUser(@Param("userId") Integer userId);
+
     @Modifying
     @Query("UPDATE ChatMessageEntity c SET c.isRead = true WHERE c.orderCode = :orderCode AND c.senderRole = 'USER'")
     void markUserMessagesAsRead(@Param("orderCode") String orderCode);
