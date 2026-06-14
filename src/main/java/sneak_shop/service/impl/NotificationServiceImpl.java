@@ -1,9 +1,9 @@
 package sneak_shop.service.impl;
 
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import sneak_shop.common.exception.AppException;
 import sneak_shop.common.exception.ErrorCode;
 import sneak_shop.common.response.PageResponse;
@@ -31,10 +31,14 @@ public class NotificationServiceImpl implements NotificationService {
         this.realtimeSocketHub = realtimeSocketHub;
     }
 
+    @Transactional(readOnly = true)
     public PageResponse<NotificationResponse> getAll(Integer userId, int page, int size) {
         return PageResponse.from(notificationRepository
                 .findByUserIdOrderByCreatedAtDesc(userId, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")))
-                .map(NotificationResponse::from));
+                .map(notification -> NotificationResponse.from(
+                        notification,
+                        notification.getOrder() != null ? notification.getOrder().getOrderCode() : null
+                )));
     }
 
     public long countUnread(Integer userId) {
@@ -62,6 +66,7 @@ public class NotificationServiceImpl implements NotificationService {
     public void notifyUser(Integer userId, OrderEntity order, String title, String body, String type, String imageUrl) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Nguoi dung khong ton tai"));
+        String orderCode = order != null ? order.getOrderCode() : null;
         NotificationEntity saved = notificationRepository.save(NotificationEntity.builder()
                 .user(user)
                 .order(order)
@@ -72,7 +77,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .isRead(false)
                 .build());
         realtimeSocketHub.afterCommit(() ->
-                realtimeSocketHub.pushNotificationCreated(userId, NotificationResponse.from(saved), countUnread(userId)));
+                realtimeSocketHub.pushNotificationCreated(userId, NotificationResponse.from(saved, orderCode), countUnread(userId)));
     }
 
     @Transactional
@@ -80,6 +85,7 @@ public class NotificationServiceImpl implements NotificationService {
         var admins = userRepository.findAllByRoleAndDeletedAtIsNull(UserRole.admin);
         if (admins.isEmpty()) return;
         for (UserEntity admin : admins) {
+            String orderCode = order != null ? order.getOrderCode() : null;
             NotificationEntity saved = notificationRepository.save(NotificationEntity.builder()
                     .user(admin)
                     .order(order)
@@ -90,7 +96,7 @@ public class NotificationServiceImpl implements NotificationService {
                     .isRead(false)
                     .build());
             realtimeSocketHub.afterCommit(() ->
-                    realtimeSocketHub.pushNotificationCreated(admin.getId(), NotificationResponse.from(saved), countUnread(admin.getId())));
+                    realtimeSocketHub.pushNotificationCreated(admin.getId(), NotificationResponse.from(saved, orderCode), countUnread(admin.getId())));
         }
     }
 }

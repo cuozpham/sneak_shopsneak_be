@@ -15,9 +15,13 @@ public record NotificationResponse(
         Instant createdAt
 ) {
     public static NotificationResponse from(NotificationEntity e) {
+        return from(e, e != null && e.getOrder() != null ? e.getOrder().getOrderCode() : null);
+    }
+
+    public static NotificationResponse from(NotificationEntity e, String orderCode) {
         return new NotificationResponse(e.getId(), e.getTitle(), e.getBody(),
                 e.getImageUrl(), e.getType(),
-                e.getOrder() != null ? e.getOrder().getOrderCode() : null,
+                orderCode,
                 e.getIsRead(), e.getCreatedAt());
     }
 }
