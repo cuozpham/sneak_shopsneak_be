@@ -14,6 +14,7 @@ import sneak_shop.dto.request.MediaItem;
 import sneak_shop.dto.request.ProductRequest;
 import sneak_shop.dto.request.ProductVariantRequest;
 import sneak_shop.dto.response.ProductResponse;
+import sneak_shop.dto.response.ProductResponse.BreadcrumbItem;
 import sneak_shop.dto.response.ProductResponse.CategorySummary;
 import sneak_shop.dto.response.ProductResponse.ColorSummary;
 import sneak_shop.dto.response.ProductResponse.VariantSummary;
@@ -25,8 +26,12 @@ import sneak_shop.service.ProductService;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -296,7 +301,7 @@ public class ProductServiceImpl implements ProductService {
     private ProductResponse toFullResponse(ProductEntity product, ProductMetricsContext metrics) {
         Integer productId = product.getId();
         ProductShopEntity shop = product.getShop();
-        double avgRating = metrics.avgRatingByProductId().getOrDefault(productId,
+        double ratingAverage = metrics.avgRatingByProductId().getOrDefault(productId,
                 product.getRatingAverage() != null ? product.getRatingAverage().doubleValue() : 0d);
         long reviewCount = metrics.reviewCountByProductId().getOrDefault(productId,
                 product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L);
@@ -338,9 +343,10 @@ public class ProductServiceImpl implements ProductService {
                         .toList(),
                 product.getStatus(), product.getCreatedAt(),
                 product.getCreatedBy(), product.getUpdatedBy(),
+                buildBreadcrumb(product),
                 categories,
                 variants,
-                avgRating,
+                ratingAverage,
                 reviewCount,
                 metrics.soldCountByProductId().getOrDefault(productId, 0L),
                 product.isDeleted());
@@ -349,7 +355,7 @@ public class ProductServiceImpl implements ProductService {
     private ProductResponse toListResponse(ProductEntity product, Map<Integer, List<String>> colorsByProductId, ProductMetricsContext metrics) {
         Integer productId = product.getId();
         ProductShopEntity shop = product.getShop();
-        double avgRating = metrics.avgRatingByProductId().getOrDefault(productId,
+        double ratingAverage = metrics.avgRatingByProductId().getOrDefault(productId,
                 product.getRatingAverage() != null ? product.getRatingAverage().doubleValue() : 0d);
         long reviewCount = metrics.reviewCountByProductId().getOrDefault(productId,
                 product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L);
@@ -376,12 +382,43 @@ public class ProductServiceImpl implements ProductService {
                 colorsByProductId.getOrDefault(productId, List.of()),
                 product.getStatus(), product.getCreatedAt(),
                 product.getCreatedBy(), product.getUpdatedBy(),
+                List.of(),
                 categories,
                 List.of(),
-                avgRating,
+                ratingAverage,
                 reviewCount,
                 0L,
                 product.isDeleted());
+    }
+
+    private List<BreadcrumbItem> buildBreadcrumb(ProductEntity product) {
+        List<BreadcrumbItem> breadcrumb = new ArrayList<>();
+        breadcrumb.add(new BreadcrumbItem("Trang chủ", "/"));
+        breadcrumb.add(new BreadcrumbItem("Sản phẩm", "/products"));
+
+        ProductCategoryEntity primaryCategory = product.getCategoryMappings().stream()
+                .map(ProductCategoryMappingEntity::getCategory)
+                .filter(c -> c != null && !c.isDeleted())
+                .findFirst()
+                .orElse(null);
+        if (primaryCategory != null) {
+            ProductCategoryEntity current = categoryRepository.findById(primaryCategory.getId()).orElse(null);
+            List<ProductCategoryEntity> chain = new ArrayList<>();
+            while (current != null) {
+                chain.add(current);
+                current = current.getParent();
+            }
+            Collections.reverse(chain);
+            for (ProductCategoryEntity category : chain) {
+                breadcrumb.add(new BreadcrumbItem(
+                        category.getName(),
+                        "/products?categorySlug=" + URLEncoder.encode(category.getSlug(), StandardCharsets.UTF_8)
+                ));
+            }
+        }
+
+        breadcrumb.add(new BreadcrumbItem(product.getName(), "/products/" + product.getSlug()));
+        return breadcrumb;
     }
 
     private ProductMetricsContext loadMetricsContext(Collection<ProductEntity> products) {

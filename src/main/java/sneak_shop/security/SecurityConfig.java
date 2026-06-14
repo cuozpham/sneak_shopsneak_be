@@ -82,10 +82,7 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/payments/momo/**").permitAll()
                         .requestMatchers("/api/payments/zalopay/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/public/upload").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/contact/my").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/admin/contacts/**").hasRole("ADMIN")
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/cart/**", "/api/orders/**", "/api/addresses/**",
                                 "/api/reviews/**", "/api/notifications/**").hasAnyRole("USER", "ADMIN")

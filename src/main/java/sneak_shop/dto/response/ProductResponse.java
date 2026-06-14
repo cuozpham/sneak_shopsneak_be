@@ -25,13 +25,15 @@ public record ProductResponse(
         Instant createdAt,
         String createdBy,
         String updatedBy,
+        List<BreadcrumbItem> breadcrumb,
         List<CategorySummary> categories,
         List<VariantSummary> variants,
-        Double avgRating,
+        Double ratingAverage,
         Long reviewCount,
         Long soldCount,
         boolean deleted
 ) {
+    public record BreadcrumbItem(String label, String href) {}
     public record CategorySummary(Integer id, String name, String slug) {}
     public record ColorSummary(Integer id, String color, Integer stockQuantity, String imageUrl) {}
     public record VariantSummary(Integer id, String size, List<ColorSummary> colors, BigDecimal price, String sku) {}
