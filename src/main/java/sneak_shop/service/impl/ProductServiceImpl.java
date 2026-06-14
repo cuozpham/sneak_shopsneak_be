@@ -46,8 +46,9 @@ public class ProductServiceImpl implements ProductService {
     private final ProductImageRepository imageRepository;
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
+    private final ReviewRepository reviewRepository;
 
-    public ProductServiceImpl(ProductRepository productRepository, ProductShopRepository shopRepository, ProductCategoryRepository categoryRepository, ProductCategoryMappingRepository mappingRepository, ProductVariantRepository variantRepository, ProductVariantColorRepository colorRepository, ProductImageRepository imageRepository, OrderItemRepository orderItemRepository, CartItemRepository cartItemRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, ProductShopRepository shopRepository, ProductCategoryRepository categoryRepository, ProductCategoryMappingRepository mappingRepository, ProductVariantRepository variantRepository, ProductVariantColorRepository colorRepository, ProductImageRepository imageRepository, OrderItemRepository orderItemRepository, CartItemRepository cartItemRepository, ReviewRepository reviewRepository) {
         this.productRepository = productRepository;
         this.shopRepository = shopRepository;
         this.categoryRepository = categoryRepository;
@@ -57,6 +58,7 @@ public class ProductServiceImpl implements ProductService {
         this.imageRepository = imageRepository;
         this.orderItemRepository = orderItemRepository;
         this.cartItemRepository = cartItemRepository;
+        this.reviewRepository = reviewRepository;
     }
 
     @Transactional(readOnly = true)
@@ -70,7 +72,8 @@ public class ProductServiceImpl implements ProductService {
                     ? productRepository.searchSortBySold(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size))
                     : productRepository.searchSortByRating(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
             Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
-            return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId)));
+            ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
+            return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, metrics)));
         }
         Sort sortSpec = switch (sort) {
             case "price_asc" -> Sort.by(Sort.Direction.ASC, "price");
@@ -82,7 +85,8 @@ public class ProductServiceImpl implements ProductService {
                 PageRequest.of(page, size, sortSpec)
         );
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
-        return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId)));
+        ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
+        return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, metrics)));
     }
 
     @Transactional(readOnly = true)
@@ -180,7 +184,8 @@ public class ProductServiceImpl implements ProductService {
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
-        return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId)));
+        ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
+        return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, metrics)));
     }
 
     @Transactional
@@ -291,6 +296,10 @@ public class ProductServiceImpl implements ProductService {
     private ProductResponse toFullResponse(ProductEntity product, ProductMetricsContext metrics) {
         Integer productId = product.getId();
         ProductShopEntity shop = product.getShop();
+        double avgRating = metrics.avgRatingByProductId().getOrDefault(productId,
+                product.getRatingAverage() != null ? product.getRatingAverage().doubleValue() : 0d);
+        long reviewCount = metrics.reviewCountByProductId().getOrDefault(productId,
+                product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L);
         List<CategorySummary> categories = product.getCategoryMappings().stream()
                 .map(m -> new CategorySummary(
                         m.getCategory().getId(),
@@ -331,15 +340,19 @@ public class ProductServiceImpl implements ProductService {
                 product.getCreatedBy(), product.getUpdatedBy(),
                 categories,
                 variants,
-                product.getRatingAverage() != null ? product.getRatingAverage().doubleValue() : 0d,
-                product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L,
+                avgRating,
+                reviewCount,
                 metrics.soldCountByProductId().getOrDefault(productId, 0L),
                 product.isDeleted());
     }
 
-    private ProductResponse toListResponse(ProductEntity product, Map<Integer, List<String>> colorsByProductId) {
+    private ProductResponse toListResponse(ProductEntity product, Map<Integer, List<String>> colorsByProductId, ProductMetricsContext metrics) {
         Integer productId = product.getId();
         ProductShopEntity shop = product.getShop();
+        double avgRating = metrics.avgRatingByProductId().getOrDefault(productId,
+                product.getRatingAverage() != null ? product.getRatingAverage().doubleValue() : 0d);
+        long reviewCount = metrics.reviewCountByProductId().getOrDefault(productId,
+                product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L);
         List<CategorySummary> categories = product.getCategoryMappings().stream()
                 .map(m -> new CategorySummary(
                         m.getCategory().getId(),
@@ -365,8 +378,8 @@ public class ProductServiceImpl implements ProductService {
                 product.getCreatedBy(), product.getUpdatedBy(),
                 categories,
                 List.of(),
-                product.getRatingAverage() != null ? product.getRatingAverage().doubleValue() : 0d,
-                product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L,
+                avgRating,
+                reviewCount,
                 0L,
                 product.isDeleted());
     }
@@ -376,7 +389,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(p -> p != null)
                 .toList();
         if (list.isEmpty()) {
-            return new ProductMetricsContext(Map.of());
+            return new ProductMetricsContext(Map.of(), Map.of(), Map.of());
         }
 
         List<Integer> productIds = list.stream().map(ProductEntity::getId).distinct().toList();
@@ -385,8 +398,18 @@ public class ProductServiceImpl implements ProductService {
                         row -> (Integer) row[0],
                         row -> row[1] instanceof Number n ? n.longValue() : 0L
                 ));
+        Map<Integer, Double> avgRatingByProductId = reviewRepository.avgRatingByProductIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Integer) row[0],
+                        row -> row[1] instanceof Number n ? n.doubleValue() : 0d
+                ));
+        Map<Integer, Long> reviewCountByProductId = reviewRepository.countByProductIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Integer) row[0],
+                        row -> row[1] instanceof Number n ? n.longValue() : 0L
+                ));
 
-        return new ProductMetricsContext(soldCountByProductId);
+        return new ProductMetricsContext(soldCountByProductId, avgRatingByProductId, reviewCountByProductId);
     }
 
     private Map<Integer, List<String>> loadColorPreviewContext(Collection<ProductEntity> products) {
@@ -596,6 +619,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private record ProductMetricsContext(
-            Map<Integer, Long> soldCountByProductId
+            Map<Integer, Long> soldCountByProductId,
+            Map<Integer, Double> avgRatingByProductId,
+            Map<Integer, Long> reviewCountByProductId
     ) {}
 }

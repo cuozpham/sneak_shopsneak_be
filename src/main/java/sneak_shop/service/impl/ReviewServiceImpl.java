@@ -20,6 +20,8 @@ import sneak_shop.service.NotificationService;
 
 import java.time.Instant;
 import java.time.Duration;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
 
@@ -125,6 +127,7 @@ public class ReviewServiceImpl implements ReviewService {
         review = reviewRepository.save(review);
 
         replaceReviewImages(review, req.productImageIds());
+        syncProductRating(product.getId());
         try {
             notificationService.notifyAdmins(
                     orderItem.getOrder(),
@@ -162,6 +165,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.setComment(EDIT_MARKER + (req.comment() == null ? "" : req.comment()));
         review = reviewRepository.save(review);
         replaceReviewImages(review, req.productImageIds());
+        syncProductRating(review.getProduct().getId());
         return ReviewResponse.from(review);
     }
 
@@ -193,6 +197,7 @@ public class ReviewServiceImpl implements ReviewService {
         review.setShopReply(req.reply());
         review.setShopReplyAt(Instant.now());
         review = reviewRepository.save(review);
+        syncProductRating(review.getProduct().getId());
         notificationService.notifyUser(
                 review.getUser().getId(),
                 review.getOrderItem() != null ? review.getOrderItem().getOrder() : null,
@@ -239,6 +244,18 @@ public class ReviewServiceImpl implements ReviewService {
         }
         review.getImages().clear();
         review.getImages().addAll(reviewImageRepository.findByReviewId(review.getId()));
+    }
+
+    @Transactional
+    protected void syncProductRating(Integer productId) {
+        if (productId == null) return;
+        Double avg = reviewRepository.avgRatingByProductId(productId);
+        Long count = reviewRepository.countByProductId(productId);
+        ProductEntity product = productRepository.findById(productId).orElse(null);
+        if (product == null) return;
+        product.setRatingAverage(BigDecimal.valueOf(avg != null ? avg : 0d).setScale(3, RoundingMode.HALF_UP));
+        product.setReviewCount(count != null ? count.intValue() : 0);
+        productRepository.save(product);
     }
 
     private void validateReviewImages(List<Integer> productImageIds) {

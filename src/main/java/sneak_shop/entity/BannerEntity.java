@@ -31,6 +31,10 @@ public class BannerEntity {
     @Builder.Default
     private String position = "hero";
 
+    @Column(name = "object_position", length = 100, nullable = false)
+    @Builder.Default
+    private String objectPosition = "center";
+
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private Boolean isActive = true;

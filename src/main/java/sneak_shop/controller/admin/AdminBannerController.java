@@ -94,6 +94,7 @@ public class AdminBannerController {
         banner.setImageUrl(req.imageUrl().trim());
         banner.setLinkUrl(normalize(req.linkUrl()));
         banner.setPosition(normalize(req.position()) != null ? normalize(req.position()) : "hero");
+        banner.setObjectPosition(normalize(req.objectPosition()) != null ? normalize(req.objectPosition()) : "center");
         banner.setIsActive(req.isActive() == null || req.isActive());
         banner.setSortOrder(req.sortOrder() != null ? req.sortOrder() : 0);
         banner.setStartDate(req.startDate());
@@ -117,6 +118,9 @@ public class AdminBannerController {
         }
         if (req.position() != null) {
             banner.setPosition(normalize(req.position()) != null ? normalize(req.position()) : "hero");
+        }
+        if (req.objectPosition() != null) {
+            banner.setObjectPosition(normalize(req.objectPosition()) != null ? normalize(req.objectPosition()) : "center");
         }
         if (req.isActive() != null) {
             banner.setIsActive(req.isActive());

@@ -2,6 +2,7 @@ package sneak_shop.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,9 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ReviewRepository extends JpaRepository<ReviewEntity, Integer> {
+    @EntityGraph(attributePaths = {"images", "images.productImage"})
     Page<ReviewEntity> findByProductIdAndProductDeletedFalseOrderByCreatedAtDesc(Integer productId, Pageable pageable);
+    @EntityGraph(attributePaths = {"images", "images.productImage"})
     Page<ReviewEntity> findByUserIdAndProductDeletedFalseOrderByCreatedAtDesc(Integer userId, Pageable pageable);
     boolean existsByOrderItemId(Integer orderItemId);
+    @EntityGraph(attributePaths = {"images", "images.productImage"})
     Optional<ReviewEntity> findByOrderItemId(Integer orderItemId);
 
     @Query("SELECT COALESCE(AVG(r.rating), 0) FROM ReviewEntity r WHERE r.product.id = :productId")
@@ -42,6 +46,8 @@ public interface ReviewRepository extends JpaRepository<ReviewEntity, Integer> {
     @Query("SELECT COALESCE(AVG(r.rating), 0) FROM ReviewEntity r")
     Double avgRatingAll();
 
+    @EntityGraph(attributePaths = {"images", "images.productImage"})
     Page<ReviewEntity> findByProductDeletedFalseOrderByCreatedAtDesc(Pageable pageable);
+    @EntityGraph(attributePaths = {"images", "images.productImage"})
     Optional<ReviewEntity> findByIdAndProductDeletedFalse(Integer id);
 }

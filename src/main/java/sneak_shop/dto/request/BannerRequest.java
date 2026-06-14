@@ -7,6 +7,7 @@ public record BannerRequest(
         String imageUrl,
         String linkUrl,
         String position,
+        String objectPosition,
         Boolean isActive,
         Integer sortOrder,
         LocalDateTime startDate,
