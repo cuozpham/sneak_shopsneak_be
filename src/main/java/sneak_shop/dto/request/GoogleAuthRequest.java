@@ -1,5 +1,3 @@
 package sneak_shop.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-
-public record GoogleAuthRequest(@NotBlank String idToken) {}
+public record GoogleAuthRequest(String idToken, String accessToken) {}

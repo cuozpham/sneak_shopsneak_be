@@ -22,7 +22,7 @@ public interface AuthService {
 
 	AuthResponse login(LoginRequest request);
 
-	AuthResponse googleLogin(String idToken);
+	AuthResponse googleLogin(String idToken, String accessToken);
 
 	AuthResponse zaloLogin(String code, String codeVerifier);
 

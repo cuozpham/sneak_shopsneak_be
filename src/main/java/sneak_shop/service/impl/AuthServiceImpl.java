@@ -157,14 +157,29 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @SuppressWarnings("unchecked")
-    public AuthResponse googleLogin(String idToken) {
+    public AuthResponse googleLogin(String idToken, String accessToken) {
         RestTemplate rest = new RestTemplate();
         Map<String, Object> info;
         try {
-            info = rest.getForObject(
-                "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken,
-                Map.class
-            );
+            if (idToken != null && !idToken.isBlank()) {
+                info = rest.getForObject(
+                        "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken,
+                        Map.class
+                );
+            } else if (accessToken != null && !accessToken.isBlank()) {
+                var headers = new org.springframework.http.HttpHeaders();
+                headers.setBearerAuth(accessToken);
+                var entity = new org.springframework.http.HttpEntity<Void>(headers);
+                var response = rest.exchange(
+                        "https://www.googleapis.com/oauth2/v3/userinfo",
+                        org.springframework.http.HttpMethod.GET,
+                        entity,
+                        Map.class
+                );
+                info = response.getBody();
+            } else {
+                throw new AppException(ErrorCode.INVALID_REQUEST, "Thieu token Google");
+            }
         } catch (Exception e) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Token Google không hợp lệ");
         }
