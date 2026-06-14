@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import sneak_shop.common.response.ApiResponse;
 import sneak_shop.common.response.PageResponse;
 import sneak_shop.dto.request.CheckoutRequest;
+import sneak_shop.dto.response.ChatContextResponse;
 import sneak_shop.dto.response.CheckoutResponse;
 import sneak_shop.dto.response.OrderResponse;
 import sneak_shop.enums.OrderStatus;
@@ -44,6 +45,12 @@ public class OrderController {
     public ApiResponse<OrderResponse> getOrder(@AuthenticationPrincipal UserContext ctx,
                                                @PathVariable String orderCode) {
         return ApiResponse.ok(orderService.getMyOrder(ctx.id(), orderCode));
+    }
+
+    @GetMapping("/{orderCode}/chat-context")
+    public ApiResponse<ChatContextResponse> getChatContext(@AuthenticationPrincipal UserContext ctx,
+                                                           @PathVariable String orderCode) {
+        return ApiResponse.ok(orderService.getChatContext(ctx.id(), orderCode));
     }
 
     @PostMapping("/{orderCode}/cancel")

@@ -10,6 +10,7 @@ import sneak_shop.common.response.PageResponse;
 import sneak_shop.dto.request.CheckoutItemRequest;
 import sneak_shop.dto.request.CheckoutRequest;
 import sneak_shop.dto.request.UpdateOrderStatusRequest;
+import sneak_shop.dto.response.ChatContextResponse;
 import sneak_shop.dto.response.CheckoutResponse;
 import sneak_shop.dto.response.OrderResponse;
 import sneak_shop.entity.*;
@@ -302,6 +303,36 @@ public class OrderServiceImpl implements OrderService {
                 .filter(o -> o.getUser().getId().equals(userId))
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Don hang khong ton tai"));
         return toResponse(order);
+    }
+
+    @Transactional
+    public ChatContextResponse getChatContext(Integer userId, String orderCode) {
+        OrderEntity order = orderRepository.findByOrderCode(orderCode)
+                .filter(o -> o.getUser().getId().equals(userId))
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Don hang khong ton tai"));
+        List<OrderItemEntity> items = orderItemRepository.findByOrderId(order.getId());
+        OrderItemEntity item = items.stream()
+                .filter(i -> i.getProduct() != null)
+                .findFirst()
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
+
+        BigDecimal originalPrice = item.getProductPrice();
+        BigDecimal currentPrice = item.getFinalPrice() != null ? item.getFinalPrice() : item.getPrice();
+        BigDecimal discountPrice = item.getDiscountPercent() != null && item.getDiscountPercent() > 0
+                ? originalPrice
+                : null;
+
+        return new ChatContextResponse(
+                order.getOrderCode(),
+                new ChatContextResponse.ProductPreview(
+                        item.getProduct().getId(),
+                        item.getProductName(),
+                        item.getProduct() != null ? item.getProduct().getSlug() : null,
+                        item.getProductImage(),
+                        currentPrice,
+                        discountPrice
+                )
+        );
     }
 
     @Transactional
