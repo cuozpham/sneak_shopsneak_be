@@ -11,7 +11,16 @@ import java.util.Optional;
 
 public interface ProductShopRepository extends JpaRepository<ProductShopEntity, Integer> {
 
-    @Query("SELECT s FROM ProductShopEntity s WHERE :keyword IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    @Query(value = """
+            SELECT s.* FROM product_shops s
+            WHERE (:keyword IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            ORDER BY s.created_at DESC, s.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(s.id) FROM product_shops s
+            WHERE (:keyword IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            """,
+            nativeQuery = true)
     Page<ProductShopEntity> search(@Param("keyword") String keyword, Pageable pageable);
 
     Optional<ProductShopEntity> findByNameIgnoreCase(String name);

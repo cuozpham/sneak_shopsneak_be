@@ -174,8 +174,9 @@ public class ProductServiceImpl implements ProductService {
 
     @Transactional(readOnly = true)
     public PageResponse<ProductResponse> adminSearch(String keyword, ProductStatus status, Boolean deleted, int page, int size) {
+        String statusStr = status != null ? status.name() : null;
         Page<ProductEntity> pageResult = productRepository.adminSearch(
-                deleted, status, keyword,
+                deleted, statusStr, keyword,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());

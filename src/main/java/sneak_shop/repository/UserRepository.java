@@ -39,12 +39,22 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     List<UserEntity> findAllByRoleAndDeletedAtIsNull(UserRole role);
 
-    @Query("""
-            SELECT u FROM UserEntity u
-            WHERE (:keyword IS NULL OR LOWER(u.email) LIKE %:keyword% OR LOWER(u.username) LIKE %:keyword% OR LOWER(u.fullName) LIKE %:keyword%)
+    @Query(value = """
+            SELECT u.* FROM users u
+            WHERE (:keyword IS NULL OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(COALESCE(u.username, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(COALESCE(u.full_name, '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:role IS NULL OR u.role = :role)
-            ORDER BY u.createdAt DESC
-            """)
+            ORDER BY u.created_at DESC, u.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(u.id) FROM users u
+            WHERE (:keyword IS NULL OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(COALESCE(u.username, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(COALESCE(u.full_name, '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
+              AND (:role IS NULL OR u.role = :role)
+            """,
+            nativeQuery = true)
     Page<UserEntity> search(@Param("keyword") String keyword,
                             @Param("role") UserRole role,
                             Pageable pageable);

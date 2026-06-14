@@ -14,22 +14,34 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
-    Optional<OrderEntity> findByOrderCode(String orderCode);
+    Optional<Orde
+    rEntity> findByOrderCode(String orderCode);
     Optional<OrderEntity> findTopByUserIdOrderByCreatedAtDesc(Integer userId);
     Page<OrderEntity> findByUserIdOrderByCreatedAtDesc(Integer userId, Pageable pageable);
     Page<OrderEntity> findByUserIdAndStatusOrderByCreatedAtDesc(Integer userId, OrderStatus status, Pageable pageable);
     Page<OrderEntity> findByStatusOrderByCreatedAtDesc(OrderStatus status, Pageable pageable);
     Page<OrderEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
-    @Query("""
-            SELECT o FROM OrderEntity o
+    @Query(value = """
+            SELECT o.* FROM orders o
+            LEFT JOIN users u ON u.id = o.user_id
             WHERE (:status IS NULL OR o.status = :status)
               AND (:keyword IS NULL OR
-                   LOWER(o.user.email) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   o.user.phone LIKE CONCAT('%', :keyword, '%') OR
-                   o.recipientPhone LIKE CONCAT('%', :keyword, '%'))
-            ORDER BY o.createdAt DESC
-            """)
+                   LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   COALESCE(u.phone_number, '') LIKE CONCAT('%', :keyword, '%') OR
+                   COALESCE(o.recipient_phone, '') LIKE CONCAT('%', :keyword, '%'))
+            ORDER BY o.created_at DESC, o.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(o.id) FROM orders o
+            LEFT JOIN users u ON u.id = o.user_id
+            WHERE (:status IS NULL OR o.status = :status)
+              AND (:keyword IS NULL OR
+                   LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   COALESCE(u.phone_number, '') LIKE CONCAT('%', :keyword, '%') OR
+                   COALESCE(o.recipient_phone, '') LIKE CONCAT('%', :keyword, '%'))
+            """,
+            nativeQuery = true)
     Page<OrderEntity> searchByKeyword(@Param("status") OrderStatus status,
                                       @Param("keyword") String keyword,
                                       Pageable pageable);

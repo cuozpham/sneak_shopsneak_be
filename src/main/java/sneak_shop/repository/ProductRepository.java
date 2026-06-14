@@ -110,16 +110,23 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             Pageable pageable
     );
 
-    @EntityGraph(attributePaths = {"shop"})
-    @Query("""
-            SELECT p FROM ProductEntity p
-            WHERE (:deleted IS NULL OR p.deleted = :deleted)
+    @Query(value = """
+            SELECT p.* FROM products p
+            WHERE (:deleted IS NULL OR p.is_deleted = :deleted)
               AND (:status IS NULL OR p.status = :status)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-            """)
+            ORDER BY p.created_at DESC, p.id DESC
+            """,
+            countQuery = """
+            SELECT COUNT(p.id) FROM products p
+            WHERE (:deleted IS NULL OR p.is_deleted = :deleted)
+              AND (:status IS NULL OR p.status = :status)
+              AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            """,
+            nativeQuery = true)
     Page<ProductEntity> adminSearch(
             @Param("deleted") Boolean deleted,
-            @Param("status") ProductStatus status,
+            @Param("status") String status,
             @Param("keyword") String keyword,
             Pageable pageable
     );
