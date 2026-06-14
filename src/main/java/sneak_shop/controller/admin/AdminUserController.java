@@ -6,7 +6,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -71,7 +70,7 @@ public class AdminUserController {
     ) {
         String kw = keyword != null ? keyword.toLowerCase() : null;
         var result = userRepository.search(kw, role,
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+                PageRequest.of(page, size));
         return ApiResponse.ok(PageResponse.from(result.map(this::toSummary)));
     }
 

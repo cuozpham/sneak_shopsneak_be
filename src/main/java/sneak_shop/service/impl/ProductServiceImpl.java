@@ -2,7 +2,6 @@ package sneak_shop.service.impl;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -177,7 +176,7 @@ public class ProductServiceImpl implements ProductService {
         String statusStr = status != null ? status.name() : null;
         Page<ProductEntity> pageResult = productRepository.adminSearch(
                 deleted, statusStr, keyword,
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))
+                PageRequest.of(page, size)
         );
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
         ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());

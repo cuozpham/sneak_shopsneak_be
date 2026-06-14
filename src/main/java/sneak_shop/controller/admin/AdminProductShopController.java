@@ -3,7 +3,6 @@ package sneak_shop.controller.admin;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +33,7 @@ public class AdminProductShopController {
             @RequestParam(defaultValue = "20") int size
     ) {
         Page<ProductShopEntity> result = shopRepository.search(
-                keyword, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+                keyword, PageRequest.of(page, size));
         return ApiResponse.ok(PageResponse.from(result.map(ProductShopResponse::from)));
     }
 
