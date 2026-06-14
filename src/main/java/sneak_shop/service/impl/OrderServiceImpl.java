@@ -352,11 +352,12 @@ public class OrderServiceImpl implements OrderService {
         order.setCancelReason(reason);
         order.setCancelledAt(Instant.now());
         order = orderRepository.save(order);
+        String cancelReasonText = (reason != null && !reason.isBlank()) ? reason : "Không có lý do";
         notificationService.notifyAdmins(order, "Đơn hàng đã bị hủy",
-                "Đơn hàng " + order.getOrderCode() + " vừa bị hủy.",
+                "Đơn hàng " + order.getOrderCode() + " vừa bị hủy. Lý do: " + cancelReasonText,
                 "order_cancelled", null);
         notificationService.notifyUser(userId, order, "Đơn hàng đã bị hủy",
-                "Đơn hàng " + order.getOrderCode() + " đã được hủy.",
+                "Đơn hàng " + order.getOrderCode() + " đã được hủy. Lý do: " + cancelReasonText,
                 "order_cancelled", null);
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_status_changed"));
         return toResponse(order);

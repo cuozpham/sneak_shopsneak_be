@@ -156,9 +156,15 @@ public class ReviewServiceImpl implements ReviewService {
         if (isEditedOnce(review.getComment())) {
             throw new AppException(ErrorCode.CONFLICT, "Ban chi duoc sua danh gia mot lan");
         }
-        Instant editableUntil = review.getCreatedAt().plus(Duration.ofHours(24));
-        if (Instant.now().isAfter(editableUntil)) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Chi co the sua danh gia trong 24 gio dau");
+        OrderEntity order = review.getOrderItem() != null ? review.getOrderItem().getOrder() : null;
+        if (order == null || order.getStatus() != OrderStatus.completed) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Chi co the sua danh gia khi don hang da hoan thanh");
+        }
+        Instant completedAt = order.getCompletedAt() != null
+                ? order.getCompletedAt()
+                : order.getUpdatedAt();
+        if (completedAt == null || Instant.now().isAfter(completedAt.plus(REVIEW_WINDOW))) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Da het han sua danh gia 7 ngay ke tu khi don hang hoan thanh");
         }
 
         if (req.rating() != null) review.setRating(req.rating());
