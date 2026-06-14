@@ -127,7 +127,7 @@ public class ReviewServiceImpl implements ReviewService {
         review = reviewRepository.save(review);
 
         replaceReviewImages(review, req.productImageIds());
-        syncProductRating(product.getId());
+        syncProductRatingAfterNewReview(product.getId(), req.rating());
         try {
             notificationService.notifyAdmins(
                     orderItem.getOrder(),
@@ -244,6 +244,31 @@ public class ReviewServiceImpl implements ReviewService {
         }
         review.getImages().clear();
         review.getImages().addAll(reviewImageRepository.findByReviewId(review.getId()));
+    }
+
+    @Transactional
+    protected void syncProductRatingAfterNewReview(Integer productId, Integer newRating) {
+        if (productId == null || newRating == null) return;
+
+        ProductEntity product = productRepository.findById(productId).orElse(null);
+        if (product == null) return;
+
+        BigDecimal oldRatingAverage = product.getRatingAverage() != null ? product.getRatingAverage() : BigDecimal.ZERO;
+        int oldReviewCount = product.getReviewCount() != null ? product.getReviewCount() : 0;
+
+        BigDecimal totalScore = oldRatingAverage
+                .multiply(BigDecimal.valueOf(oldReviewCount))
+                .add(BigDecimal.valueOf(newRating));
+
+        BigDecimal newRatingAverage = totalScore.divide(
+                BigDecimal.valueOf(oldReviewCount + 1L),
+                3,
+                RoundingMode.HALF_UP
+        );
+
+        product.setRatingAverage(newRatingAverage);
+        product.setReviewCount(oldReviewCount + 1);
+        productRepository.save(product);
     }
 
     @Transactional
