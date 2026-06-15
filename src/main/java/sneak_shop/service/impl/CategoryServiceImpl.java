@@ -12,6 +12,9 @@ import sneak_shop.repository.ProductCategoryMappingRepository;
 import sneak_shop.repository.ProductCategoryRepository;
 import sneak_shop.service.CategoryService;
 
+import sneak_shop.entity.BannerEntity;
+import sneak_shop.repository.BannerRepository;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -23,11 +26,14 @@ public class CategoryServiceImpl implements CategoryService {
 
     private final ProductCategoryRepository categoryRepository;
     private final ProductCategoryMappingRepository mappingRepository;
+    private final BannerRepository bannerRepository;
 
     public CategoryServiceImpl(ProductCategoryRepository categoryRepository,
-                               ProductCategoryMappingRepository mappingRepository) {
+                               ProductCategoryMappingRepository mappingRepository,
+                               BannerRepository bannerRepository) {
         this.categoryRepository = categoryRepository;
         this.mappingRepository = mappingRepository;
+        this.bannerRepository = bannerRepository;
     }
 
     public List<CategoryResponse> getAll() {
@@ -36,7 +42,12 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     public List<CategoryResponse> adminGetAll() {
+        return adminGetAll(null);
+    }
+
+    public List<CategoryResponse> adminGetAll(Boolean deleted) {
         return categoryRepository.findAll().stream()
+                .filter(c -> deleted == null || c.isDeleted() == deleted)
                 .sorted(Comparator.comparingInt((ProductCategoryEntity c) -> c.getSortOrder() != null ? c.getSortOrder() : 0))
                 .map(CategoryResponse::from).toList();
     }
@@ -99,6 +110,11 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai"));
         entity.setDeleted(true);
         categoryRepository.save(entity);
+
+        List<BannerEntity> banners = bannerRepository.findAllByCategoryIdOrderBySortOrderAscIdDesc(id);
+        if (banners != null && !banners.isEmpty()) {
+            bannerRepository.deleteAll(banners);
+        }
     }
 
     public void restore(Integer id) {

@@ -23,8 +23,9 @@ public class AdminCategoryController {
     }
 
     @GetMapping
-    public ApiResponse<List<CategoryResponse>> getAll() {
-        return ApiResponse.ok(categoryService.adminGetAll());
+    public ApiResponse<List<CategoryResponse>> getAll(
+            @RequestParam(value = "deleted", required = false) Boolean deleted) {
+        return ApiResponse.ok(categoryService.adminGetAll(deleted));
     }
 
     @PostMapping
