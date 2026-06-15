@@ -45,4 +45,42 @@ public class PolicyController {
                 """;
         return ApiResponse.ok("success", terms);
     }
+
+    @GetMapping("/privacy")
+    public ApiResponse<String> getPrivacyPolicy() {
+        String privacy = """
+                CHÍNH SÁCH BẢO MẬT & QUYỀN RIÊNG TƯ
+                
+                Cảm ơn quý khách đã truy cập vào website được vận hành bởi CÔNG TY TNHH MANDRO.
+                
+                Chúng tôi tôn trọng và cam kết bảo mật những thông tin mang tính riêng tư của quý khách. Xin vui lòng đọc kỹ bản chính sách bảo mật dưới đây để hiểu rõ hơn những cam kết mà chúng tôi thực hiện nhằm tôn trọng và bảo vệ quyền lợi của người truy cập.
+                
+                1. Thu thập và sử dụng thông tin
+                MANDRO chỉ thu thập các thông tin cơ bản liên quan đến đơn đặt hàng bao gồm: Họ tên, số điện thoại, và địa chỉ giao hàng.
+                
+                Mục đích sử dụng: Xử lý đơn hàng, nghiên cứu thị trường và nâng cao chất lượng dịch vụ chăm sóc khách hàng.
+                
+                Cam kết từ MANDRO:
+                - Mọi thông tin cá nhân của quý khách chỉ được sử dụng đúng mục đích đã thông báo.
+                - Việc thu thập thông tin đều được thực hiện dựa trên sự đồng ý và tự nguyện của khách hàng.
+                - Thông tin khách hàng được bảo mật nội bộ và chỉ những bộ phận có thẩm quyền mới được phép tiếp cận (bao gồm: Bộ phận chăm sóc khách hàng, bộ phận Marketing, và nhân viên bán hàng).
+                
+                Lưu ý: Trong quá trình nhận thông tin quảng cáo hoặc chăm sóc khách hàng, quý khách hoàn toàn có quyền yêu cầu MANDRO dừng sử dụng thông tin của mình bất kỳ lúc nào.
+                
+                2. Biện pháp bảo mật thông tin
+                Trách nhiệm nội bộ: Mỗi nhân viên tại MANDRO đều được quán triệt và có trách nhiệm tuyệt đối trong việc tuân thủ các quy định bảo mật thông tin của khách hàng.
+                
+                Xử lý sự cố: Trong trường hợp máy chủ lưu trữ thông tin bị hacker tấn công dẫn đến nguy cơ mất mát dữ liệu của khách hàng, MANDRO sẽ nhanh chóng thông báo vụ việc cho các cơ quan chức năng có thẩm quyền để kịp thời điều tra và xử lý.
+                
+                3. Trách nhiệm đảm bảo quyền riêng tư từ phía khách hàng
+                Để bảo vệ quyền lợi của chính mình, MANDRO khuyến nghị quý khách lưu ý các điểm sau:
+                - Cung cấp thông tin: Quý khách chỉ cần cung cấp đầy đủ và chính xác các thông tin cơ bản theo yêu cầu của MANDRO. Quý khách phải tự chịu trách nhiệm về tính trung thực của các thông tin này, cũng như tự chịu rủi ro nếu tự ý cung cấp các thông tin ngoài phạm vi yêu cầu.
+                - Bảo mật tài khoản: Tuyệt đối không cung cấp các thông tin liên quan đến tài khoản ngân hàng (khi chưa được mã hóa trong các giao dịch thanh toán trực tuyến) hoặc các thông tin cá nhân nhạy cảm khác.
+                - Trường hợp chia sẻ thông tin: Nếu quý khách cung cấp thông tin cá nhân cho nhiều tổ chức, cá nhân khác nhau, quý khách cần yêu cầu các bên đó cùng có trách nhiệm bảo mật.
+                - Miễn trừ trách nhiệm: Trong trường hợp thông tin của quý khách bị tiết lộ gây thiệt hại, quý khách cần chủ động xác định chính xác nguồn lộ thông tin. MANDRO sẽ không chịu trách nhiệm đối với các sự cố rò rỉ dữ liệu nếu không có căn cứ xác đáng chứng minh MANDRO là bên vi phạm cam kết bảo mật.
+                
+                Trên đây là toàn bộ chính sách bảo mật của MANDRO. Nếu quý khách còn bất kỳ thắc mắc hay câu hỏi nào, xin vui lòng liên hệ trực tiếp với chúng tôi để được hỗ trợ và giải đáp kịp thời!
+                """;
+        return ApiResponse.ok("success", privacy);
+    }
 }
