@@ -10,11 +10,13 @@ import sneak_shop.common.response.ApiResponse;
 import sneak_shop.common.response.PageResponse;
 import sneak_shop.entity.AddressEntity;
 import sneak_shop.entity.OrderEntity;
+import sneak_shop.entity.TransactionEntity;
 import sneak_shop.dto.response.FinancialLogResponse;
 import sneak_shop.entity.FinancialLogEntity;
 import sneak_shop.repository.AddressRepository;
 import sneak_shop.repository.OrderRepository;
 import sneak_shop.repository.FinancialLogRepository;
+import sneak_shop.repository.TransactionRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,33 +29,52 @@ public class AdminFinancialLogController {
     private final FinancialLogRepository repository;
     private final AddressRepository addressRepository;
     private final OrderRepository orderRepository;
+    private final TransactionRepository transactionRepository;
 
     public AdminFinancialLogController(FinancialLogRepository repository,
                                        AddressRepository addressRepository,
-                                       OrderRepository orderRepository) {
+                                       OrderRepository orderRepository,
+                                       TransactionRepository transactionRepository) {
         this.repository = repository;
         this.addressRepository = addressRepository;
         this.orderRepository = orderRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     @GetMapping
     public ApiResponse<PageResponse<FinancialLogResponse>> getAll(
             @RequestParam(required = false) String email,
+            @RequestParam(required = false) String orderCode,
+            @RequestParam(required = false) String transactionCode,
             @RequestParam(required = false) Integer ordersId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
+        Integer resolvedOrderId = ordersId;
+        if (resolvedOrderId == null && orderCode != null && !orderCode.isBlank()) {
+            resolvedOrderId = orderRepository.findByOrderCode(orderCode.trim()).map(OrderEntity::getId).orElse(-1);
+        }
+        Integer resolvedTransactionId = null;
+        if (transactionCode != null && !transactionCode.isBlank()) {
+            resolvedTransactionId = transactionRepository.findByTransactionCode(transactionCode.trim())
+                    .map(TransactionEntity::getId)
+                    .orElse(-1);
+        }
+        final Integer finalResolvedOrderId = resolvedOrderId;
+        final Integer finalResolvedTransactionId = resolvedTransactionId;
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Specification<FinancialLogEntity> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             if (email != null && !email.isBlank())
                 predicates.add(cb.like(cb.lower(root.get("email")), "%" + email.toLowerCase() + "%"));
-            if (ordersId != null)
-                predicates.add(cb.equal(root.get("ordersId"), ordersId));
+            if (finalResolvedOrderId != null)
+                predicates.add(cb.equal(root.get("ordersId"), finalResolvedOrderId));
+            if (finalResolvedTransactionId != null)
+                predicates.add(cb.equal(root.get("transactionsId"), finalResolvedTransactionId));
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         return ApiResponse.ok(PageResponse.from(repository.findAll(spec, pageable).map(log ->
-                FinancialLogResponse.from(log).withAddressText(resolveAddressText(log))
+                enrichResponse(log)
         )));
     }
 
@@ -61,7 +82,22 @@ public class AdminFinancialLogController {
     public ApiResponse<FinancialLogResponse> create(@RequestBody FinancialLogEntity req) {
         req.setId(null);
         FinancialLogEntity saved = repository.save(req);
-        return ApiResponse.ok(FinancialLogResponse.from(saved).withAddressText(resolveAddressText(saved)));
+        return ApiResponse.ok(enrichResponse(saved));
+    }
+
+    private FinancialLogResponse enrichResponse(FinancialLogEntity log) {
+        FinancialLogResponse response = FinancialLogResponse.from(log).withAddressText(resolveAddressText(log));
+        if (log.getOrdersId() != null) {
+            response = response.withOrderCode(orderRepository.findById(log.getOrdersId())
+                    .map(OrderEntity::getOrderCode)
+                    .orElse(null));
+        }
+        if (log.getTransactionsId() != null) {
+            response = response.withTransactionCode(transactionRepository.findById(log.getTransactionsId())
+                    .map(TransactionEntity::getTransactionCode)
+                    .orElse(null));
+        }
+        return response;
     }
 
     private String resolveAddressText(FinancialLogEntity log) {

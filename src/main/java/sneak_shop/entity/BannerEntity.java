@@ -49,6 +49,9 @@ public class BannerEntity {
     @Column(name = "end_date")
     private LocalDateTime endDate;
 
+    @Column(name = "category_id")
+    private Integer categoryId;
+
     @Column(name = "created_at", updatable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();

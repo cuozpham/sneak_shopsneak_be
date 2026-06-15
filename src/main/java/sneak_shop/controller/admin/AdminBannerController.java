@@ -27,23 +27,29 @@ public class AdminBannerController {
     }
 
     @GetMapping
-    public ApiResponse<List<BannerEntity>> getAll() {
+    public ApiResponse<List<BannerEntity>> getAll(
+            @RequestParam(value = "categoryId", required = false) String categoryId) {
+        if ("null".equals(categoryId)) {
+            return ApiResponse.ok(bannerRepository.findAllByCategoryIdIsNullOrderBySortOrderAscIdDesc());
+        } else if (categoryId != null && !categoryId.isBlank()) {
+            return ApiResponse.ok(bannerRepository.findAllByCategoryIdOrderBySortOrderAscIdDesc(Integer.parseInt(categoryId.trim())));
+        }
         return ApiResponse.ok(bannerRepository.findAllByOrderBySortOrderAscIdDesc());
     }
 
     @PostMapping
     public ApiResponse<BannerEntity> create(@RequestBody BannerRequest req) {
-        if (bannerRepository.count() >= MAX_BANNERS) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Chi duoc toi da 9 banner");
+        Integer catId = req.categoryId();
+        long count = (catId == null) ? bannerRepository.countByCategoryIdIsNull() : bannerRepository.countByCategoryId(catId);
+        int limit = (catId == null) ? 9 : 3;
+        if (count >= limit) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Chi duoc toi da " + limit + " banner");
         }
         BannerEntity banner = new BannerEntity();
         applyCreate(banner, req);
         if (req.sortOrder() == null) {
-            banner.setSortOrder(bannerRepository.findAllByOrderBySortOrderAscIdDesc().stream()
-                    .map(BannerEntity::getSortOrder)
-                    .max(Integer::compareTo)
-                    .map(max -> max + 1)
-                    .orElse(0));
+            Integer maxSort = (catId == null) ? bannerRepository.findMaxSortOrderIsNull() : bannerRepository.findMaxSortOrder(catId);
+            banner.setSortOrder(maxSort != null ? maxSort + 1 : 0);
         }
         return ApiResponse.ok("Da tao banner", bannerRepository.save(banner));
     }
@@ -78,11 +84,11 @@ public class AdminBannerController {
 
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Integer id) {
-        if (!bannerRepository.existsById(id)) {
-            throw new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Banner khong ton tai");
-        }
-        bannerRepository.deleteById(id);
-        normalizeOrder();
+        BannerEntity banner = bannerRepository.findById(id)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Banner khong ton tai"));
+        Integer categoryId = banner.getCategoryId();
+        bannerRepository.delete(banner);
+        normalizeOrder(categoryId);
         return ApiResponse.ok("Da xoa banner");
     }
 
@@ -99,6 +105,7 @@ public class AdminBannerController {
         banner.setSortOrder(req.sortOrder() != null ? req.sortOrder() : 0);
         banner.setStartDate(req.startDate());
         banner.setEndDate(req.endDate());
+        banner.setCategoryId(req.categoryId());
         if (banner.getCreatedAt() == null) {
             banner.setCreatedAt(LocalDateTime.now());
         }
@@ -140,8 +147,10 @@ public class AdminBannerController {
         banner.setUpdatedAt(LocalDateTime.now());
     }
 
-    private void normalizeOrder() {
-        List<BannerEntity> banners = bannerRepository.findAllByOrderBySortOrderAscIdDesc();
+    private void normalizeOrder(Integer categoryId) {
+        List<BannerEntity> banners = (categoryId == null)
+                ? bannerRepository.findAllByCategoryIdIsNullOrderBySortOrderAscIdDesc()
+                : bannerRepository.findAllByCategoryIdOrderBySortOrderAscIdDesc(categoryId);
         for (int i = 0; i < banners.size(); i++) {
             BannerEntity banner = banners.get(i);
             if (!Integer.valueOf(i).equals(banner.getSortOrder())) {

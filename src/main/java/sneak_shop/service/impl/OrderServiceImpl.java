@@ -198,8 +198,9 @@ public class OrderServiceImpl implements OrderService {
         boolean needsTransaction = isOnlinePayment
                 || req.paymentMethod() == PaymentMethod.momo
                 || req.paymentMethod() == PaymentMethod.zalopay;
+        TransactionEntity transaction = null;
         if (needsTransaction) {
-            TransactionEntity transaction = transactionRepository.save(TransactionEntity.builder()
+            transaction = transactionRepository.save(TransactionEntity.builder()
                     .order(order)
                     .transactionCode("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase())
                     .amount(total)
@@ -207,17 +208,20 @@ public class OrderServiceImpl implements OrderService {
                     .status(TransactionStatus.pending)
                     .description("Thanh toan don hang " + order.getOrderCode())
                     .build());
-            financialLogRepository.save(FinancialLogEntity.builder()
-                    .email(user.getEmail())
-                    .usersId(user.getId())
-                    .addressesId(linkedAddress != null ? linkedAddress.getId() : null)
-                    .ordersId(order.getId())
-                    .transactionsId(transaction.getId())
-                    .amount(total.longValueExact())
-                    .bankName(paymentLabel(req.paymentMethod()))
-                    .note("Tao giao dich cho don " + order.getOrderCode())
-                    .build());
         }
+
+        financialLogRepository.save(FinancialLogEntity.builder()
+                .email(user.getEmail())
+                .usersId(user.getId())
+                .addressesId(linkedAddress != null ? linkedAddress.getId() : null)
+                .ordersId(order.getId())
+                .transactionsId(transaction != null ? transaction.getId() : null)
+                .amount(total.longValueExact())
+                .bankName(paymentLabel(req.paymentMethod()))
+                .note(transaction != null
+                        ? "Ghi nhan giao dich cho don " + order.getOrderCode()
+                        : "Ghi nhan don COD cho doi soat " + order.getOrderCode())
+                .build());
 
         String paymentUrl = null;
         if (req.paymentMethod() == PaymentMethod.momo) {

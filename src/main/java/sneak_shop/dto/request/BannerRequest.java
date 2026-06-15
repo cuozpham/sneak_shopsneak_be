@@ -11,5 +11,6 @@ public record BannerRequest(
         Boolean isActive,
         Integer sortOrder,
         LocalDateTime startDate,
-        LocalDateTime endDate
+        LocalDateTime endDate,
+        Integer categoryId
 ) {}

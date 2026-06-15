@@ -11,7 +11,9 @@ public record FinancialLogResponse(
         Integer addressesId,
         String addressText,
         Integer ordersId,
+        String orderCode,
         Integer transactionsId,
+        String transactionCode,
         Integer productsId,
         Integer productsShopId,
         Long amount,
@@ -24,7 +26,7 @@ public record FinancialLogResponse(
                 e.getId(), e.getEmail(),
                 e.getUsersId(), e.getAddressesId(),
                 null,
-                e.getOrdersId(), e.getTransactionsId(),
+                e.getOrdersId(), null, e.getTransactionsId(), null,
                 e.getProductsId(), e.getProductsShopId(),
                 e.getAmount(), e.getBankName(), e.getNote(), e.getCreatedAt()
         );
@@ -33,7 +35,23 @@ public record FinancialLogResponse(
     public FinancialLogResponse withAddressText(String addressText) {
         return new FinancialLogResponse(
                 id, email, usersId, addressesId, addressText,
-                ordersId, transactionsId, productsId, productsShopId,
+                ordersId, orderCode, transactionsId, transactionCode, productsId, productsShopId,
+                amount, bankName, note, createdAt
+        );
+    }
+
+    public FinancialLogResponse withOrderCode(String orderCode) {
+        return new FinancialLogResponse(
+                id, email, usersId, addressesId, addressText,
+                ordersId, orderCode, transactionsId, transactionCode, productsId, productsShopId,
+                amount, bankName, note, createdAt
+        );
+    }
+
+    public FinancialLogResponse withTransactionCode(String transactionCode) {
+        return new FinancialLogResponse(
+                id, email, usersId, addressesId, addressText,
+                ordersId, orderCode, transactionsId, transactionCode, productsId, productsShopId,
                 amount, bankName, note, createdAt
         );
     }
