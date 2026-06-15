@@ -24,6 +24,7 @@ import sneak_shop.service.ZaloPayPaymentService;
 import sneak_shop.websocket.RealtimeSocketHub;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -267,7 +268,9 @@ public class OrderServiceImpl implements OrderService {
         BigDecimal price = item.variant() != null ? item.variant().getPrice() : item.product().getPrice();
         Integer discountPercent = item.product().getDiscountPercent() != null ? item.product().getDiscountPercent() : 0;
         if (discountPercent <= 0) return price;
-        return price.multiply(BigDecimal.valueOf(100L - discountPercent)).divide(BigDecimal.valueOf(100));
+        return price.multiply(BigDecimal.valueOf(100L - discountPercent))
+                .divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP)
+                .setScale(0, RoundingMode.HALF_UP);
     }
 
     private List<OrderItem> buildBuyNowItems(List<CheckoutItemRequest> requests) {
