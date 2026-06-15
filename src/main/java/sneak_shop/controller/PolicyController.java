@@ -83,4 +83,30 @@ public class PolicyController {
                 """;
         return ApiResponse.ok("success", privacy);
     }
+
+    @GetMapping("/exchange")
+    public ApiResponse<String> getExchangePolicy() {
+        String exchange = """
+                CHÍNH SÁCH ĐỔI HÀNG
+                
+                Khách hàng được đổi sản phẩm trong vòng 15 ngày kể từ ngày mua hàng trong trường hợp sản phẩm không đúng với mô tả trên website, bị lỗi kỹ thuật, không vừa size hoặc không còn ưng ý đối với sản phẩm đã đặt trong điều kiện:
+                
+                - Quý khách còn hoá đơn mua hàng và thông tin khách hàng trên hoá đơn (Bao gồm tên và số điện thoại)
+                
+                - Sản phẩm chưa qua sử dụng, không bị hư hỏng do hoá chất hoặc tác động ngoại lực, lỗi từ người dùng (va quệt, co kéo, bảo quản không đúng cách, tự ý thay đổi kết cấu và màu sắc của sản phẩm…)
+                
+                - Sản phẩm đổi mới có giá trị bằng hoặc cao hơn sản phẩm đã mua. Trong trường hợp sản phẩm được chọn để đổi có giá trị cao hơn, khách hàng vui lòng thanh toán thêm phần chênh lệch. Nếu khách hàng lựa chọn sản phẩm được chọn để đổi có giá trị thấp hơn, MANDRO sẽ không hoàn lại tiền thừa.
+                
+                Cách thức đổi sản phẩm
+                
+                1. Đối với khách hàng mua tại cửa hàng
+                Khách hàng có thể gửi trực tiếp sản phẩm cần đổi trả kèm theo hoá đơn mua hàng đến các showroom của MANDRO trên toàn quốc.
+                
+                2. Đối với khách hàng mua online
+                Khách hàng liên hệ với fanpage hoặc hotline để nhân viên tư vấn, hướng dẫn gửi sản phẩm về showroom gần nhất.
+                
+                Sau khi đã nhận được sản phẩm trả lại, chúng tôi sẽ tiến hành kiểm tra sản phẩm theo quy định đổi trả (thời gian từ 3 - 7 ngày không tính ngày Lễ, Tết) để xử lý và thông báo đến khách hàng qua điện thoại.
+                """;
+        return ApiResponse.ok("success", exchange);
+    }
 }
