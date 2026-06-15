@@ -31,6 +31,7 @@ import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -313,7 +314,7 @@ public class ProductServiceImpl implements ProductService {
                         v.getSku()
                 ))
                 .toList();
-        List<MediaItem> imageUrls = product.getImages().stream()
+        List<MediaItem> imageUrls = uniqueMedia(product.getImages()).stream()
                 .filter(img -> img.getType() == null || !"review".equalsIgnoreCase(img.getType()))
                 .map(img -> new MediaItem(img.getId(), img.getImageUrl(), img.getType()))
                 .toList();
@@ -356,7 +357,7 @@ public class ProductServiceImpl implements ProductService {
                         m.getCategory().getSlug()
                 ))
                 .toList();
-        List<MediaItem> mediaItems = product.getImages().stream()
+        List<MediaItem> mediaItems = uniqueMedia(product.getImages()).stream()
                 .filter(img -> img.getType() == null || !"review".equalsIgnoreCase(img.getType()))
                 .map(img -> new MediaItem(img.getId(), img.getImageUrl(), img.getType()))
                 .toList();
@@ -492,15 +493,36 @@ public class ProductServiceImpl implements ProductService {
     private void syncImages(ProductEntity product, List<MediaItem> media) {
         if (media == null) return;
         imageRepository.deleteByProductId(product.getId());
-        if (media.isEmpty()) return;
-        for (int i = 0; i < media.size(); i++) {
-            MediaItem item = media.get(i);
+        List<MediaItem> uniqueMedia = uniqueMediaItems(media);
+        if (uniqueMedia.isEmpty()) return;
+        for (int i = 0; i < uniqueMedia.size(); i++) {
+            MediaItem item = uniqueMedia.get(i);
             if (item == null || item.url() == null || item.url().isBlank()) continue;
             imageRepository.save(ProductImageEntity.builder()
                     .product(product).imageUrl(item.url())
                     .type(item.type() != null ? item.type() : "image")
                     .sortOrder(i).build());
         }
+    }
+
+    private List<ProductImageEntity> uniqueMedia(List<ProductImageEntity> images) {
+        if (images == null || images.isEmpty()) return List.of();
+        Map<String, ProductImageEntity> deduped = new LinkedHashMap<>();
+        for (ProductImageEntity image : images) {
+            if (image == null || image.getImageUrl() == null || image.getImageUrl().isBlank()) continue;
+            deduped.putIfAbsent(image.getImageUrl().trim(), image);
+        }
+        return new ArrayList<>(deduped.values());
+    }
+
+    private List<MediaItem> uniqueMediaItems(List<MediaItem> media) {
+        if (media == null || media.isEmpty()) return List.of();
+        Map<String, MediaItem> deduped = new LinkedHashMap<>();
+        for (MediaItem item : media) {
+            if (item == null || item.url() == null || item.url().isBlank()) continue;
+            deduped.putIfAbsent(item.url().trim(), item);
+        }
+        return new ArrayList<>(deduped.values());
     }
 
     private void syncVariants(ProductEntity product, List<ProductVariantRequest> variants) {
