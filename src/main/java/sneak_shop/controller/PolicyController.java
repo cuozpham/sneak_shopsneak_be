@@ -109,4 +109,31 @@ public class PolicyController {
                 """;
         return ApiResponse.ok("success", exchange);
     }
+
+    @GetMapping("/warranty")
+    public ApiResponse<String> getWarrantyPolicy() {
+        String warranty = """
+                CHÍNH SÁCH BẢO HÀNH
+                
+                Tất cả sản phẩm mua tại MANDRO đều được áp dụng chính sách bảo hành chính hãng nhằm đảm bảo quyền lợi tối ưu cho quý khách.
+                
+                1. Thời hạn bảo hành
+                - Bảo hành 6 tháng kể từ ngày mua hàng đối với các lỗi keo, sứt chỉ, bong đế.
+                - Bảo hành 1 đổi 1 trong vòng 15 ngày nếu phát hiện lỗi từ nhà sản xuất.
+                
+                2. Điều kiện bảo hành
+                - Sản phẩm còn trong thời hạn bảo hành.
+                - Có hóa đơn mua hàng hoặc thông tin số điện thoại đăng ký mua hàng trên hệ thống.
+                - Sản phẩm hư hỏng do lỗi kỹ thuật của nhà sản xuất (như bong keo, sứt chỉ, lỗi chất liệu da/vải...).
+                
+                3. Các trường hợp không được bảo hành
+                - Sản phẩm bị hư hỏng do tác động ngoại lực (va quệt, rách xước do cọ xát vật sắc nhọn...).
+                - Hư hỏng do sử dụng chất tẩy rửa mạnh, ngâm nước lâu ngày hoặc bảo quản không đúng cách.
+                - Sản phẩm đã quá hạn bảo hành hoặc đã bị tự ý sửa đổi kết cấu ban đầu.
+                
+                Cách thức bảo hành
+                Quý khách vui lòng mang sản phẩm trực tiếp kèm hóa đơn đến showroom của MANDRO hoặc liên hệ hotline 0934762018 để được nhân viên hướng dẫn gửi sản phẩm về trung tâm bảo hành gần nhất.
+                """;
+        return ApiResponse.ok("success", warranty);
+    }
 }
