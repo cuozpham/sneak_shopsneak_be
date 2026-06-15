@@ -72,16 +72,47 @@ public class ProductServiceImpl implements ProductService {
             Integer categoryId, ProductStatus status, int page, int size, String sort
     ) {
         String statusStr = status != null ? status.name() : null;
+
+        List<Integer> categoryIds = new ArrayList<>();
+        int hasCategory = 0;
+        if (categoryId != null) {
+            categoryIds.add(categoryId);
+            try {
+                List<ProductCategoryEntity> allCategories = categoryRepository.findByStatusOrderBySortOrderAsc(sneak_shop.enums.CategoryStatus.active)
+                        .stream().filter(c -> !c.isDeleted()).toList();
+                collectDescendants(categoryId, allCategories, categoryIds);
+            } catch (Exception e) {
+                // Fallback to single category
+            }
+            hasCategory = 1;
+        } else {
+            categoryIds.add(0);
+        }
+
+        final int hasCatParam = hasCategory;
+        final List<Integer> catIdsParam = categoryIds;
+
         Page<ProductEntity> pageResult = switch (sort) {
-            case "price_asc" -> productRepository.searchPriceAsc(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
-            case "price_desc" -> productRepository.searchPriceDesc(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
-            case "sold" -> productRepository.searchSortBySold(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
-            case "rating" -> productRepository.searchSortByRating(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
-            default -> productRepository.searchNewest(statusStr, minPrice, maxPrice, keyword, categoryId, PageRequest.of(page, size));
+            case "price_asc" -> productRepository.searchPriceAsc(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
+            case "price_desc" -> productRepository.searchPriceDesc(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
+            case "sold" -> productRepository.searchSortBySold(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
+            case "rating" -> productRepository.searchSortByRating(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
+            default -> productRepository.searchNewest(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
         };
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
         ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
         return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, metrics)));
+    }
+
+    private void collectDescendants(Integer parentId, List<ProductCategoryEntity> allCategories, List<Integer> targetList) {
+        for (ProductCategoryEntity cat : allCategories) {
+            if (cat.getParent() != null && parentId.equals(cat.getParent().getId())) {
+                if (!targetList.contains(cat.getId())) {
+                    targetList.add(cat.getId());
+                    collectDescendants(cat.getId(), allCategories, targetList);
+                }
+            }
+        }
     }
 
     @Transactional(readOnly = true)

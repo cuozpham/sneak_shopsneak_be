@@ -6,11 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.jpa.repository.EntityGraph;
 import sneak_shop.entity.ProductEntity;
-import sneak_shop.enums.ProductStatus;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<ProductEntity, Integer> {
@@ -25,7 +24,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             ORDER BY p.created_at DESC, p.id DESC
             """,
             countQuery = """
@@ -36,7 +35,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchNewest(
@@ -44,7 +43,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("keyword") String keyword,
-            @Param("categoryId") Integer categoryId,
+            @Param("hasCategory") int hasCategory,
+            @Param("categoryIds") Collection<Integer> categoryIds,
             Pageable pageable
     );
 
@@ -56,7 +56,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             ORDER BY p.price ASC, p.id DESC
             """,
             countQuery = """
@@ -67,7 +67,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchPriceAsc(
@@ -75,7 +75,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("keyword") String keyword,
-            @Param("categoryId") Integer categoryId,
+            @Param("hasCategory") int hasCategory,
+            @Param("categoryIds") Collection<Integer> categoryIds,
             Pageable pageable
     );
 
@@ -87,7 +88,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             ORDER BY p.price DESC, p.id DESC
             """,
             countQuery = """
@@ -98,7 +99,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchPriceDesc(
@@ -106,7 +107,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("keyword") String keyword,
-            @Param("categoryId") Integer categoryId,
+            @Param("hasCategory") int hasCategory,
+            @Param("categoryIds") Collection<Integer> categoryIds,
             Pageable pageable
     );
 
@@ -147,7 +149,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             ORDER BY (SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi WHERE oi.product_id = p.id) DESC
             """,
             countQuery = """
@@ -158,7 +160,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchSortBySold(
@@ -166,7 +168,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("keyword") String keyword,
-            @Param("categoryId") Integer categoryId,
+            @Param("hasCategory") int hasCategory,
+            @Param("categoryIds") Collection<Integer> categoryIds,
             Pageable pageable
     );
 
@@ -178,7 +181,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             ORDER BY (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) DESC
             """,
             countQuery = """
@@ -189,7 +192,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
-              AND (:categoryId IS NULL OR m.category_id = :categoryId)
+              AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchSortByRating(
@@ -197,7 +200,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("minPrice") BigDecimal minPrice,
             @Param("maxPrice") BigDecimal maxPrice,
             @Param("keyword") String keyword,
-            @Param("categoryId") Integer categoryId,
+            @Param("hasCategory") int hasCategory,
+            @Param("categoryIds") Collection<Integer> categoryIds,
             Pageable pageable
     );
 }
