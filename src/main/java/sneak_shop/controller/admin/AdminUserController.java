@@ -46,7 +46,9 @@ public class AdminUserController {
     ) {}
 
     record LockRequest(
-            @NotBlank @Size(min = 2, max = 500) String reason
+            @NotBlank(message = "Lý do không được để trống")
+            @Size(min = 2, max = 500, message = "Lý do phải từ 2 đến 500 ký tự")
+            String reason
     ) {}
 
     record RoleRequest(@NotNull UserRole role) {}

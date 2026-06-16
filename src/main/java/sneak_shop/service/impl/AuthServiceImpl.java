@@ -24,6 +24,9 @@ import sneak_shop.service.UsernameGenerator;
 import sneak_shop.service.ZaloAuthService;
 import sneak_shop.websocket.RealtimeSocketHub;
 
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
@@ -261,13 +264,21 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponse.from(user);
     }
 
+    private static final DateTimeFormatter LOCK_TIME_FMT =
+            DateTimeFormatter.ofPattern("HH:mm dd/MM/yyyy");
+    private static final ZoneId VN_ZONE = ZoneId.of("Asia/Ho_Chi_Minh");
+
     private String lockedMessage(UserEntity user) {
         if (Boolean.FALSE.equals(user.getEnabled()) || user.getStatus() == UserStatus.inactive) {
             return "Tài khoản đã bị xóa";
         }
-        String lockedAt = user.getDeletedAt() != null ? " lúc " + user.getDeletedAt() : "";
+        String lockedAt = "";
+        if (user.getDeletedAt() != null) {
+            ZonedDateTime vn = user.getDeletedAt().atZone(VN_ZONE);
+            lockedAt = " lúc " + LOCK_TIME_FMT.format(vn);
+        }
         if (user.getLockReason() != null && !user.getLockReason().isBlank()) {
-            return "Tài khoản đã bị khóa" + lockedAt + ": " + user.getLockReason();
+            return "Tài khoản đã bị khóa" + lockedAt + ". Lý do: " + user.getLockReason();
         }
         return "Tài khoản đã bị khóa" + lockedAt;
     }
