@@ -59,7 +59,8 @@ public class AdminChatController {
             String lastContent,
             String lastSenderRole,
             Long unreadCount,
-            Instant lastTime
+            Instant lastTime,
+            String avatarUrl
     ) {}
 
     private final ChatRepository chatRepository;
@@ -90,7 +91,8 @@ public class AdminChatController {
                         (String) row[4],
                         (String) row[5],
                         row[3] instanceof Number n ? n.longValue() : Long.parseLong(row[3].toString()),
-                        row[2] instanceof Instant i ? i : ((java.sql.Timestamp) row[2]).toInstant()
+                        row[2] instanceof Instant i ? i : ((java.sql.Timestamp) row[2]).toInstant(),
+                        row[6] != null ? row[6].toString() : null
                 ))
                 .toList();
         return ApiResponse.ok(conversations);

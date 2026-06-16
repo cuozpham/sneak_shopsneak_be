@@ -52,7 +52,8 @@ public interface ChatRepository extends JpaRepository<ChatMessageEntity, Integer
                MAX(c.created_at) as last_time,
                SUM(CASE WHEN c.is_read = 0 AND c.sender_role = 'USER' THEN 1 ELSE 0 END) as unread_count,
                (SELECT content FROM chat_messages m WHERE m.order_code = c.order_code ORDER BY m.created_at DESC LIMIT 1) as last_content,
-               (SELECT sender_role FROM chat_messages m WHERE m.order_code = c.order_code ORDER BY m.created_at DESC LIMIT 1) as last_sender_role
+               (SELECT sender_role FROM chat_messages m WHERE m.order_code = c.order_code ORDER BY m.created_at DESC LIMIT 1) as last_sender_role,
+               (SELECT u.avatar_url FROM chat_messages m JOIN users u ON u.id = m.user_id WHERE m.order_code = c.order_code AND m.sender_role = 'USER' AND m.user_id IS NOT NULL ORDER BY m.created_at DESC LIMIT 1) as avatar_url
         FROM chat_messages c
         GROUP BY c.order_code
         ORDER BY last_time DESC
