@@ -1,1 +1,1 @@
-ALTER TABLE users DROP COLUMN IF EXISTS zalo_id;
+ALTER TABLE users DROP COLUMN zalo_id;
