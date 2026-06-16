@@ -113,26 +113,23 @@ public class PolicyController {
     @GetMapping("/warranty")
     public ApiResponse<String> getWarrantyPolicy() {
         String warranty = """
-                CHÍNH SÁCH BẢO HÀNH
-                
-                Tất cả sản phẩm mua tại MANDRO đều được áp dụng chính sách bảo hành chính hãng nhằm đảm bảo quyền lợi tối ưu cho quý khách.
-                
-                1. Thời hạn bảo hành
-                - Bảo hành 6 tháng kể từ ngày mua hàng đối với các lỗi keo, sứt chỉ, bong đế.
-                - Bảo hành 1 đổi 1 trong vòng 15 ngày nếu phát hiện lỗi từ nhà sản xuất.
-                
-                2. Điều kiện bảo hành
-                - Sản phẩm còn trong thời hạn bảo hành.
-                - Có hóa đơn mua hàng hoặc thông tin số điện thoại đăng ký mua hàng trên hệ thống.
-                - Sản phẩm hư hỏng do lỗi kỹ thuật của nhà sản xuất (như bong keo, sứt chỉ, lỗi chất liệu da/vải...).
-                
-                3. Các trường hợp không được bảo hành
-                - Sản phẩm bị hư hỏng do tác động ngoại lực (va quệt, rách xước do cọ xát vật sắc nhọn...).
-                - Hư hỏng do sử dụng chất tẩy rửa mạnh, ngâm nước lâu ngày hoặc bảo quản không đúng cách.
-                - Sản phẩm đã quá hạn bảo hành hoặc đã bị tự ý sửa đổi kết cấu ban đầu.
-                
-                Cách thức bảo hành
-                Quý khách vui lòng mang sản phẩm trực tiếp kèm hóa đơn đến showroom của MANDRO hoặc liên hệ hotline 0934762018 để được nhân viên hướng dẫn gửi sản phẩm về trung tâm bảo hành gần nhất.
+                <h1>CHÍNH SÁCH BẢO HÀNH</h1>
+                <p>MANDRO CAM KẾT VỚI QUÝ KHÁCH HÀNG VỀ CHÍNH SÁCH BẢO HÀNH VÀ BẢO TRÌ SẢN PHẨM NHƯ SAU:</p>
+                <p>Bảo hành miễn phí 6 tháng kể từ ngày mua hàng được ghi trên hoá đơn. <em>(Lưu ý: Không áp dụng với hàng sale từ 50% trở lên)</em></p>
+                <h2>QUY ĐỊNH CHUNG VỀ BẢO HÀNH</h2>
+                <p>Khắc phục những lỗi hỏng do nhà sản xuất như: nở da, bong tróc, bung đế...</p>
+                <p>Kênh tiếp nhận bảo hành chính thức: <a href="https://zalo.me/0934762018" target="_blank" rel="noopener noreferrer">OA ZALO MANDRO</a>.</p>
+                <p>Mỗi số điện thoại khách hàng đăng ký tương ứng một mã bảo hành hợp lệ.</p>
+                <h2>NHỮNG TRƯỜNG HỢP KHÔNG ĐƯỢC BẢO HÀNH</h2>
+                <p>Không nhận các sản phẩm quá cũ (đế và da bị lão hoá, không có độ bám dính của keo hoặc không có phụ kiện để thay).</p>
+                <p>Những sản phẩm bị hư, hỏng do hoả hoạn, tác động ngoại lực hoặc do lỗi từ người dùng (va quệt, cào kéo, bảo quản không đúng cách, tự ý thay đổi kết cấu, màu sắc của sản phẩm...).</p>
+                <h2>QUY TRÌNH BẢO HÀNH</h2>
+                <p>Liên hệ cho kênh <a href="https://zalo.me/0934762018" target="_blank" rel="noopener noreferrer">OA ZALO MANDRO</a>.</p>
+                <p>Nếu lỗi nằm trong hạng mục bảo hành, khách hàng sẽ gửi sản phẩm về Trung tâm bảo hành theo hướng dẫn của nhân viên CSKH.</p>
+                <p>Sau khi nhận được sản phẩm cần bảo hành, Bộ phận Bảo hành của MANDRO sẽ tiến hành kiểm tra, đánh giá và xác định nguyên nhân lỗi. Sau đó, thông báo cho khách hàng về hạng mục bảo hành và dự trù chi phí sửa chữa (nếu có).</p>
+                <p>Đối với những sản phẩm đã qua sử dụng, MANDRO sẽ tiến hành bảo hành trong vòng từ 7 - 10 ngày làm việc (không bao gồm các ngày nghỉ lễ, tết).</p>
+                <p>Sau khi đã sửa chữa xong, MANDRO sẽ liên hệ lại với quý khách, đặt lịch hẹn trả sản phẩm và thông báo về chi phí sửa chữa (nếu có).</p>
+                <p>Hotline: <a href="tel:0934762018">0934762018</a></p>
                 """;
         return ApiResponse.ok("success", warranty);
     }
