@@ -110,12 +110,6 @@ public class AuthController {
         return ApiResponse.ok("Đăng nhập thành công", authService.googleLoginOnly(req.idToken(), req.accessToken()));
     }
 
-    @PostMapping("/zalo-login")
-    public ApiResponse<AuthResponse> zaloLogin(@RequestBody Map<String, String> body) {
-        return ApiResponse.ok("Đăng nhập thành công",
-                authService.zaloLogin(body.get("code"), body.get("codeVerifier")));
-    }
-
     // ── Password reset ──────────────────────────────────────────────────────
 
     @PostMapping("/forgot-password")

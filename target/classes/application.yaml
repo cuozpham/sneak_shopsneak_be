@@ -4,10 +4,10 @@ spring:
   profiles:
     default: local
   datasource:
-    url: jdbc:mysql://localhost:3306/sneak_shop?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+    url: ${DB_URL:jdbc:mysql://localhost:3306/sneak_shop?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 12345678
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:12345678}
   flyway:
     enabled: false
   jpa:
@@ -24,7 +24,7 @@ spring:
       static-locations: "file:uploads/,classpath:/static/"
   servlet:
     multipart:
-      max-file-size: 10MB
+      max-file-size: 20MB
       max-request-size: 50MB
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
@@ -38,13 +38,22 @@ spring:
           starttls:
             enable: true
 
+server:
+  port: ${PORT:8080}
+
 app:
   jwt:
     secret: "sneak-shop-local-development-secret-key-change-me-at-least-32chars"
     expiration-minutes: 1440
   upload:
     dir: uploads/images
-    base-url: http://localhost:8080/images
+    base-url: ${APP_UPLOAD_BASE_URL:http://localhost:8080}/images
+  cloudinary:
+    url: ${CLOUDINARY_URL:}
+    cloud-name: ${CLOUDINARY_CLOUD_NAME:}
+    api-key: ${CLOUDINARY_API_KEY:}
+    api-secret: ${CLOUDINARY_API_SECRET:}
+    folder: ${CLOUDINARY_FOLDER:sneak-shop}
   mail:
     from: ${MAIL_FROM:no-reply@sneakshop.vn}
   vnpay:
@@ -69,7 +78,7 @@ app:
   zalo-auth:
     app-id: "4087361764145925062"
     secret-key: "xud5lbE9XYYEDXmQJGY0"
-    redirect-uri: "https://daintily-affection-rebirth.ngrok-free.dev/zalo/callback"
+    redirect-uri: ${APP_ZALO_REDIRECT_URI:https://daintily-affection-rebirth.ngrok-free.dev/zalo/callback}
   zalopay:
     mock-enabled: true
     app-id: "2553"
@@ -79,9 +88,9 @@ app:
     return-url: "http://localhost:8080/api/payments/zalopay/return"
     callback-url: "http://localhost:8080/api/payments/zalopay/callback"
   backend:
-    base-url: "http://localhost:8080"
+    base-url: ${APP_BACKEND_BASE_URL:http://localhost:8080}
   frontend:
-    base-url: "http://localhost:3000"
+    base-url: ${APP_FRONTEND_BASE_URL:http://localhost:3000}
 
 springdoc:
   api-docs:
@@ -94,7 +103,7 @@ springdoc:
 
 web:
   cors:
-    allowed-origins: "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177"
+    allowed-origins: ${WEB_CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177}
 
 ---
 spring:
@@ -102,10 +111,10 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: jdbc:mysql://localhost:3306/sneak_shop?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+    url: ${DB_URL:jdbc:mysql://localhost:3306/sneak_shop?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: root
-    password: 12345678
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:12345678}
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     show-sql: true
@@ -116,19 +125,15 @@ spring:
     activate:
       on-profile: local
   datasource:
-    url: jdbc:h2:mem:sneak_shop;MODE=MySQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: ${DB_URL:jdbc:mysql://localhost:3306/sneak_shop?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:12345678}
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: create-drop
-    show-sql: false
+      ddl-auto: update
+    show-sql: true
 
 ---
 spring:
@@ -151,11 +156,42 @@ spring:
   config:
     activate:
       on-profile: prod
+  flyway:
+    enabled: true
+    baseline-on-migrate: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE:true}
+    baseline-version: ${SPRING_FLYWAY_BASELINE_VERSION:20}
+    locations: classpath:db
   datasource:
     url: ${DB_URL}
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
+    hikari:
+      initialization-fail-timeout: -1
+      connection-timeout: 10000
+      validation-timeout: 5000
+      maximum-pool-size: 5
+      minimum-idle: 0
+      idle-timeout: 300000
+      max-lifetime: 900000
+      keepalive-time: 120000
+  threads:
+    virtual:
+      enabled: true
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: none
     show-sql: false
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: false
+        temp:
+          use_jdbc_metadata_defaults: false
+
+server:
+  tomcat:
+    threads:
+      max: 24
+      min-spare: 2
