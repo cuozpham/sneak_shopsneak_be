@@ -101,8 +101,13 @@ public class AuthController {
     }
 
     @PostMapping("/google")
-    public ApiResponse<AuthResponse> googleLogin(@Valid @RequestBody GoogleAuthRequest req) {
-        return ApiResponse.ok("Đăng nhập thành công", authService.googleLogin(req.idToken(), req.accessToken()));
+    public ApiResponse<AuthResponse> googleRegister(@Valid @RequestBody GoogleAuthRequest req) {
+        return ApiResponse.ok("Đăng ký thành công", authService.googleLogin(req.idToken(), req.accessToken()));
+    }
+
+    @PostMapping("/google/login")
+    public ApiResponse<AuthResponse> googleLoginOnly(@Valid @RequestBody GoogleAuthRequest req) {
+        return ApiResponse.ok("Đăng nhập thành công", authService.googleLoginOnly(req.idToken(), req.accessToken()));
     }
 
     @PostMapping("/zalo-login")

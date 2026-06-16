@@ -24,6 +24,8 @@ public interface AuthService {
 
 	AuthResponse googleLogin(String idToken, String accessToken);
 
+	AuthResponse googleLoginOnly(String idToken, String accessToken);
+
 	AuthResponse zaloLogin(String code, String codeVerifier);
 
 	AuthResponse me(Integer userId);
