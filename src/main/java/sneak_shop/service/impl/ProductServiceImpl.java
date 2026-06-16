@@ -200,6 +200,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
         product.setDeleted(true);
+        product.setStatus(ProductStatus.inactive);
         product.setUpdatedBy(currentUser());
         productRepository.save(product);
     }
