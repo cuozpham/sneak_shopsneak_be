@@ -18,6 +18,9 @@ import sneak_shop.websocket.RealtimeSocketHub;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/chat")
@@ -28,16 +31,18 @@ public class ChatController {
             String orderCode,
             String senderRole,
             String senderName,
+            String senderAvatarUrl,
             String content,
             Instant createdAt,
             Boolean isRead
     ) {
-        static ChatMessageResponse from(ChatMessageEntity e) {
+        static ChatMessageResponse from(ChatMessageEntity e, String avatarUrl) {
             return new ChatMessageResponse(
                     e.getId(),
                     e.getOrderCode(),
                     e.getSenderRole(),
                     e.getSenderName(),
+                    avatarUrl,
                     e.getContent(),
                     e.getCreatedAt(),
                     e.getIsRead()
@@ -80,10 +85,10 @@ public class ChatController {
     ) {
         verifyAccess(orderCode, ctx.id());
         chatRepository.markAdminMessagesAsRead(orderCode);
-        List<ChatMessageResponse> messages = chatRepository
-                .findByOrderCodeOrderByCreatedAtAsc(orderCode)
-                .stream()
-                .map(ChatMessageResponse::from)
+        List<ChatMessageEntity> entities = chatRepository.findByOrderCodeOrderByCreatedAtAsc(orderCode);
+        Map<Integer, String> avatarMap = buildAvatarMap(entities);
+        List<ChatMessageResponse> messages = entities.stream()
+                .map(e -> ChatMessageResponse.from(e, e.getUserId() != null ? avatarMap.get(e.getUserId()) : null))
                 .toList();
         return ApiResponse.ok(messages);
     }
@@ -123,10 +128,22 @@ public class ChatController {
                 .build();
 
         ChatMessageEntity saved = chatRepository.save(msg);
+        String avatarUrl = user.getAvatarUrl();
         realtimeSocketHub.afterCommit(() -> {
             realtimeSocketHub.pushChatMessageToUser(ctx.id(), saved);
             realtimeSocketHub.pushChatMessageToAdmins(saved);
         });
-        return ApiResponse.ok("Gui tin nhan thanh cong", ChatMessageResponse.from(saved));
+        return ApiResponse.ok("Gui tin nhan thanh cong", ChatMessageResponse.from(saved, avatarUrl));
+    }
+
+    private Map<Integer, String> buildAvatarMap(List<ChatMessageEntity> entities) {
+        Set<Integer> userIds = entities.stream()
+                .map(ChatMessageEntity::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (userIds.isEmpty()) return Map.of();
+        return userRepository.findAllById(userIds).stream()
+                .filter(u -> u.getAvatarUrl() != null && !u.getAvatarUrl().isBlank())
+                .collect(Collectors.toMap(UserEntity::getId, UserEntity::getAvatarUrl));
     }
 }

@@ -2,20 +2,27 @@ package sneak_shop.controller.admin;
 
 import jakarta.transaction.Transactional;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import sneak_shop.common.exception.AppException;
 import sneak_shop.common.exception.ErrorCode;
 import sneak_shop.common.response.ApiResponse;
 import sneak_shop.entity.ChatMessageEntity;
 import sneak_shop.entity.OrderEntity;
+import sneak_shop.entity.UserEntity;
 import sneak_shop.repository.ChatRepository;
 import sneak_shop.repository.OrderRepository;
+import sneak_shop.repository.UserRepository;
+import sneak_shop.security.UserContext;
 import sneak_shop.service.NotificationService;
 import sneak_shop.websocket.RealtimeSocketHub;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin/chat")
@@ -27,16 +34,18 @@ public class AdminChatController {
             String orderCode,
             String senderRole,
             String senderName,
+            String senderAvatarUrl,
             String content,
             Instant createdAt,
             Boolean isRead
     ) {
-        static ChatMessageResponse from(ChatMessageEntity e) {
+        static ChatMessageResponse from(ChatMessageEntity e, String avatarUrl) {
             return new ChatMessageResponse(
                     e.getId(),
                     e.getOrderCode(),
                     e.getSenderRole(),
                     e.getSenderName(),
+                    avatarUrl,
                     e.getContent(),
                     e.getCreatedAt(),
                     e.getIsRead()
@@ -55,15 +64,18 @@ public class AdminChatController {
 
     private final ChatRepository chatRepository;
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final RealtimeSocketHub realtimeSocketHub;
 
     public AdminChatController(ChatRepository chatRepository,
                                OrderRepository orderRepository,
+                               UserRepository userRepository,
                                NotificationService notificationService,
                                RealtimeSocketHub realtimeSocketHub) {
         this.chatRepository = chatRepository;
         this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
         this.notificationService = notificationService;
         this.realtimeSocketHub = realtimeSocketHub;
     }
@@ -88,10 +100,10 @@ public class AdminChatController {
     @Transactional
     public ApiResponse<List<ChatMessageResponse>> getMessages(@PathVariable String orderCode) {
         chatRepository.markUserMessagesAsRead(orderCode);
-        List<ChatMessageResponse> messages = chatRepository
-                .findByOrderCodeOrderByCreatedAtAsc(orderCode)
-                .stream()
-                .map(ChatMessageResponse::from)
+        List<ChatMessageEntity> entities = chatRepository.findByOrderCodeOrderByCreatedAtAsc(orderCode);
+        Map<Integer, String> avatarMap = buildAvatarMap(entities);
+        List<ChatMessageResponse> messages = entities.stream()
+                .map(e -> ChatMessageResponse.from(e, e.getUserId() != null ? avatarMap.get(e.getUserId()) : null))
                 .toList();
         return ApiResponse.ok(messages);
     }
@@ -99,6 +111,7 @@ public class AdminChatController {
     @PostMapping("/{orderCode}/send")
     @Transactional
     public ApiResponse<ChatMessageResponse> sendMessage(
+            @AuthenticationPrincipal UserContext ctx,
             @PathVariable String orderCode,
             @RequestBody Map<String, String> body
     ) {
@@ -106,10 +119,15 @@ public class AdminChatController {
         if (content == null || content.isBlank()) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Noi dung tin nhan khong duoc de trong");
         }
+        UserEntity admin = userRepository.findById(ctx.id()).orElse(null);
+        String adminName = (admin != null && admin.getFullName() != null && !admin.getFullName().isBlank())
+                ? admin.getFullName() : "Sneak Shop";
+        String adminAvatarUrl = admin != null ? admin.getAvatarUrl() : null;
         ChatMessageEntity msg = ChatMessageEntity.builder()
                 .orderCode(orderCode)
+                .userId(ctx.id())
                 .senderRole("ADMIN")
-                .senderName("Sneak Shop")
+                .senderName(adminName)
                 .content(content.trim())
                 .build();
 
@@ -131,7 +149,18 @@ public class AdminChatController {
             }
             realtimeSocketHub.pushChatMessageToAdmins(saved);
         });
-        return ApiResponse.ok("Gui tin nhan thanh cong", ChatMessageResponse.from(saved));
+        return ApiResponse.ok("Gui tin nhan thanh cong", ChatMessageResponse.from(saved, adminAvatarUrl));
+    }
+
+    private Map<Integer, String> buildAvatarMap(List<ChatMessageEntity> entities) {
+        Set<Integer> userIds = entities.stream()
+                .map(ChatMessageEntity::getUserId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        if (userIds.isEmpty()) return Map.of();
+        return userRepository.findAllById(userIds).stream()
+                .filter(u -> u.getAvatarUrl() != null && !u.getAvatarUrl().isBlank())
+                .collect(Collectors.toMap(UserEntity::getId, UserEntity::getAvatarUrl));
     }
 
     private Integer resolveTargetUserId(String orderCode) {
