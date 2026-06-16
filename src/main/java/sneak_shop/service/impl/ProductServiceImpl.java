@@ -185,6 +185,7 @@ public class ProductServiceImpl implements ProductService {
         if (req.coverImageUrl() != null) product.setCoverImageUrl(req.coverImageUrl());
         if (req.sizeGuideNote() != null) product.setSizeGuideNote(req.sizeGuideNote());
         if (req.status() != null) product.setStatus(req.status());
+        if (product.isDeleted()) product.setDeleted(false);
         product.setUpdatedBy(currentUser());
         product = productRepository.save(product);
         if (req.categoryIds() != null) syncCategories(product, req.categoryIds());
