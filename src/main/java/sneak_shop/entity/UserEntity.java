@@ -39,7 +39,7 @@ public class UserEntity {
     @Column(unique = true, length = 100)
     private String username;
 
-    @Column(length = 255)
+    @Column(length = 255, nullable = true)
     private String password;
 
     @Column(name = "full_name", length = 255)

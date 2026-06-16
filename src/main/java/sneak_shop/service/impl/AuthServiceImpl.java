@@ -151,7 +151,7 @@ public class AuthServiceImpl implements AuthService {
             throw new AppException(ErrorCode.UNAUTHORIZED, lockedMessage(user));
         }
 
-        if (!passwordEncoder.matches(req.password(), user.getPassword())) {
+        if (user.getPassword() == null || !passwordEncoder.matches(req.password(), user.getPassword())) {
             throw new AppException(ErrorCode.UNAUTHORIZED, "Thông tin đăng nhập không đúng");
         }
 
@@ -204,7 +204,6 @@ public class AuthServiceImpl implements AuthService {
                     .email(googleEmail)
                     .fullName(name)
                     .username(usernameGenerator.generateFromEmail(googleEmail))
-                    .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
                     .emailVerified(true)
                     .role(googleEmail.equals(PRIMARY_ADMIN_EMAIL) ? sneak_shop.enums.UserRole.admin : sneak_shop.enums.UserRole.user)
                     .build();
@@ -236,7 +235,6 @@ public class AuthServiceImpl implements AuthService {
                     .zaloId(info.id())
                     .fullName(info.name())
                     .username(usernameGenerator.generate(info.name(), "zalo_" + info.id()))
-                    .password(passwordEncoder.encode(java.util.UUID.randomUUID().toString()))
                     .avatarUrl(info.avatarUrl())
                     .build();
             created[0] = true;
