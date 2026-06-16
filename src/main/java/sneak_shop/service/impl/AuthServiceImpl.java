@@ -195,30 +195,20 @@ public class AuthServiceImpl implements AuthService {
         final String googleEmail = email;
         final String name = (String) info.getOrDefault("name", googleEmail);
 
-        final boolean[] created = {false};
-        UserEntity user = userRepository.findByEmail(googleEmail).orElseGet(() -> {
-            UserEntity u = UserEntity.builder()
-                    .email(googleEmail)
-                    .fullName(name)
-                    .username(usernameGenerator.generateFromEmail(googleEmail))
-                    .emailVerified(true)
-                    .role(googleEmail.equals(PRIMARY_ADMIN_EMAIL) ? sneak_shop.enums.UserRole.admin : sneak_shop.enums.UserRole.user)
-                    .build();
-            created[0] = true;
-            return saveWithRetry(u, googleEmail);
-        });
-
-        if (googleEmail.equals(PRIMARY_ADMIN_EMAIL) && user.getRole() != sneak_shop.enums.UserRole.admin) {
-            user.setRole(sneak_shop.enums.UserRole.admin);
-            userRepository.save(user);
+        if (userRepository.existsByEmail(googleEmail)) {
+            throw new AppException(ErrorCode.CONFLICT, "Email này đã được đăng ký. Vui lòng đăng nhập.");
         }
 
-        if (user.getDeletedAt() != null || user.getStatus() == UserStatus.inactive || Boolean.FALSE.equals(user.getEnabled())) {
-            throw new AppException(ErrorCode.UNAUTHORIZED, lockedMessage(user));
-        }
-        if (created[0]) {
-            realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("user_created"));
-        }
+        UserEntity user = UserEntity.builder()
+                .email(googleEmail)
+                .fullName(name)
+                .username(usernameGenerator.generateFromEmail(googleEmail))
+                .emailVerified(true)
+                .role(googleEmail.equals(PRIMARY_ADMIN_EMAIL) ? sneak_shop.enums.UserRole.admin : sneak_shop.enums.UserRole.user)
+                .build();
+        user = saveWithRetry(user, googleEmail);
+
+        realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("user_created"));
         return AuthResponse.from(user, jwtService.generateToken(user));
     }
 
