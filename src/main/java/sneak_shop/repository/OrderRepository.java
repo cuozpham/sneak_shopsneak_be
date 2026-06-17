@@ -41,7 +41,7 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
                    COALESCE(o.recipient_phone, '') LIKE CONCAT('%', :keyword, '%'))
             """,
             nativeQuery = true)
-    Page<OrderEntity> searchByKeyword(@Param("status") OrderStatus status,
+    Page<OrderEntity> searchByKeyword(@Param("status") String status,
                                       @Param("keyword") String keyword,
                                       Pageable pageable);
     Long countByUserId(Integer userId);

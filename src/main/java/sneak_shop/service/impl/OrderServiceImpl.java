@@ -419,7 +419,7 @@ public class OrderServiceImpl implements OrderService {
     public PageResponse<OrderResponse> adminGetAll(OrderStatus status, String keyword, int page, int size) {
         var pageable = PageRequest.of(page, size);
         String kw = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
-        var pageResult = orderRepository.searchByKeyword(status, kw, pageable);
+        var pageResult = orderRepository.searchByKeyword(status != null ? status.name() : null, kw, pageable);
         return PageResponse.from(pageResult.map(this::toResponse));
     }
 
