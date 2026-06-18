@@ -98,7 +98,8 @@ public class CategoryServiceImpl implements CategoryService {
         if (req.status() != null) entity.setStatus(req.status());
         entity = categoryRepository.save(entity);
         reposition(entity, parent, req.sortOrder(), id);
-        if (!Objects.equals(oldParentId, parentKey(parent))) {
+        Integer newParentId = parent != null ? parent.getId() : null;
+        if (!Objects.equals(oldParentId, newParentId)) {
             renumberAndSave(loadSiblings(oldParentId, id));
         }
         return CategoryResponse.from(entity);
