@@ -24,7 +24,5 @@ public interface AuthService {
 
 	AuthResponse googleLogin(String idToken, String accessToken);
 
-	AuthResponse googleLoginOnly(String idToken, String accessToken);
-
 	AuthResponse me(Integer userId);
 }
