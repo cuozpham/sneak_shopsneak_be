@@ -12,6 +12,5 @@ public interface CategoryService {
     CategoryResponse create(CategoryRequest req);
     CategoryResponse update(Integer id, CategoryRequest req);
     long countProducts(Integer id);
-    void delete(Integer id, Integer moveProductsToId);
-    void restore(Integer id);
+    void delete(Integer id);
 }

@@ -46,16 +46,8 @@ public class AdminCategoryController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Void> delete(@PathVariable Integer id,
-                                     @RequestParam(value = "moveProductsTo", required = false) Integer moveProductsTo) {
-        categoryService.delete(id, moveProductsTo);
+    public ApiResponse<Void> delete(@PathVariable Integer id) {
+        categoryService.delete(id);
         return ApiResponse.ok("Xoa danh muc thanh cong");
-    }
-
-    @PatchMapping("/{id}/restore")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Void> restore(@PathVariable Integer id) {
-        categoryService.restore(id);
-        return ApiResponse.ok("Khoi phuc danh muc thanh cong");
     }
 }

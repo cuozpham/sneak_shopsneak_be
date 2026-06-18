@@ -108,29 +108,12 @@ public class CategoryServiceImpl implements CategoryService {
         return mappingRepository.countByCategoryId(id);
     }
 
-    public void delete(Integer id, Integer moveProductsToId) {
+    public void delete(Integer id) {
         ProductCategoryEntity entity = categoryRepository.findById(id)
                 .filter(c -> !c.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai"));
 
-        if (moveProductsToId != null) {
-            if (moveProductsToId.equals(id)) {
-                throw new AppException(ErrorCode.INVALID_REQUEST, "Danh muc dich khong the la chinh danh muc dang xoa");
-            }
-            ProductCategoryEntity target = categoryRepository.findById(moveProductsToId)
-                    .filter(c -> !c.isDeleted())
-                    .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc dich khong ton tai"));
-            for (var mapping : mappingRepository.findByCategoryId(id)) {
-                if (mappingRepository.existsByProductIdAndCategoryId(mapping.getProduct().getId(), moveProductsToId)) {
-                    mappingRepository.delete(mapping);
-                } else {
-                    mapping.setCategory(target);
-                    mappingRepository.save(mapping);
-                }
-            }
-        } else {
-            mappingRepository.deleteByCategoryId(id);
-        }
+        mappingRepository.deleteByCategoryId(id);
 
         entity.setDeleted(true);
         categoryRepository.save(entity);
@@ -139,14 +122,6 @@ public class CategoryServiceImpl implements CategoryService {
         if (banners != null && !banners.isEmpty()) {
             bannerRepository.deleteAll(banners);
         }
-    }
-
-    public void restore(Integer id) {
-        ProductCategoryEntity entity = categoryRepository.findById(id)
-                .filter(ProductCategoryEntity::isDeleted)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai hoac chua bi xoa"));
-        entity.setDeleted(false);
-        categoryRepository.save(entity);
     }
 
     private ProductCategoryEntity resolveParent(Integer parentId, Integer selfId) {
