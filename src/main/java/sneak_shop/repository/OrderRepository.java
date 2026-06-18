@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
     Optional<OrderEntity> findByOrderCode(String orderCode);
     Optional<OrderEntity> findTopByUserIdOrderByCreatedAtDesc(Integer userId);
+    boolean existsByAddressId(Integer addressId);
     Page<OrderEntity> findByUserIdOrderByCreatedAtDesc(Integer userId, Pageable pageable);
     Page<OrderEntity> findByUserIdAndStatusOrderByCreatedAtDesc(Integer userId, OrderStatus status, Pageable pageable);
     Page<OrderEntity> findByStatusOrderByCreatedAtDesc(OrderStatus status, Pageable pageable);

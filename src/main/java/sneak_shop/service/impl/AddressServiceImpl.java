@@ -9,6 +9,7 @@ import sneak_shop.dto.response.AddressResponse;
 import sneak_shop.entity.AddressEntity;
 import sneak_shop.entity.UserEntity;
 import sneak_shop.repository.AddressRepository;
+import sneak_shop.repository.OrderRepository;
 import sneak_shop.repository.UserRepository;
 import sneak_shop.service.AddressService;
 
@@ -19,10 +20,12 @@ public class AddressServiceImpl implements AddressService {
 
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
 
-    public AddressServiceImpl(AddressRepository addressRepository, UserRepository userRepository) {
+    public AddressServiceImpl(AddressRepository addressRepository, UserRepository userRepository, OrderRepository orderRepository) {
         this.addressRepository = addressRepository;
         this.userRepository = userRepository;
+        this.orderRepository = orderRepository;
     }
 
     public List<AddressResponse> getAll(Integer userId) {
@@ -83,6 +86,9 @@ public class AddressServiceImpl implements AddressService {
         AddressEntity address = addressRepository.findById(addressId)
                 .filter(a -> a.getUser().getId().equals(userId))
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Dia chi khong ton tai"));
+        if (orderRepository.existsByAddressId(addressId)) {
+            throw new AppException(ErrorCode.CONFLICT, "Khong the xoa dia chi da duoc su dung trong don hang");
+        }
         boolean wasDefault = Boolean.TRUE.equals(address.getIsDefault());
         addressRepository.delete(address);
         if (wasDefault) {
