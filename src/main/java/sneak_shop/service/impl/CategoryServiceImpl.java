@@ -104,10 +104,34 @@ public class CategoryServiceImpl implements CategoryService {
         return CategoryResponse.from(entity);
     }
 
-    public void delete(Integer id) {
+    public long countProducts(Integer id) {
+        return mappingRepository.countByCategoryId(id);
+    }
+
+    public void delete(Integer id, Integer moveProductsToId) {
         ProductCategoryEntity entity = categoryRepository.findById(id)
                 .filter(c -> !c.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai"));
+
+        if (moveProductsToId != null) {
+            if (moveProductsToId.equals(id)) {
+                throw new AppException(ErrorCode.INVALID_REQUEST, "Danh muc dich khong the la chinh danh muc dang xoa");
+            }
+            ProductCategoryEntity target = categoryRepository.findById(moveProductsToId)
+                    .filter(c -> !c.isDeleted())
+                    .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc dich khong ton tai"));
+            for (var mapping : mappingRepository.findByCategoryId(id)) {
+                if (mappingRepository.existsByProductIdAndCategoryId(mapping.getProduct().getId(), moveProductsToId)) {
+                    mappingRepository.delete(mapping);
+                } else {
+                    mapping.setCategory(target);
+                    mappingRepository.save(mapping);
+                }
+            }
+        } else {
+            mappingRepository.deleteByCategoryId(id);
+        }
+
         entity.setDeleted(true);
         categoryRepository.save(entity);
 

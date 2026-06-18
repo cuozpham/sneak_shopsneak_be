@@ -39,10 +39,16 @@ public class AdminCategoryController {
         return ApiResponse.ok(categoryService.update(id, req));
     }
 
+    @GetMapping("/{id}/product-count")
+    public ApiResponse<Long> productCount(@PathVariable Integer id) {
+        return ApiResponse.ok(categoryService.countProducts(id));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ApiResponse<Void> delete(@PathVariable Integer id) {
-        categoryService.delete(id);
+    public ApiResponse<Void> delete(@PathVariable Integer id,
+                                     @RequestParam(value = "moveProductsTo", required = false) Integer moveProductsTo) {
+        categoryService.delete(id, moveProductsTo);
         return ApiResponse.ok("Xoa danh muc thanh cong");
     }
 

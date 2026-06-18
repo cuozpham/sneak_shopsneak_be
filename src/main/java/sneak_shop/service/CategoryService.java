@@ -11,6 +11,7 @@ public interface CategoryService {
     CategoryResponse getBySlug(String slug);
     CategoryResponse create(CategoryRequest req);
     CategoryResponse update(Integer id, CategoryRequest req);
-    void delete(Integer id);
+    long countProducts(Integer id);
+    void delete(Integer id, Integer moveProductsToId);
     void restore(Integer id);
 }

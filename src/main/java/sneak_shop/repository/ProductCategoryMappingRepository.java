@@ -19,6 +19,12 @@ public interface ProductCategoryMappingRepository extends JpaRepository<ProductC
     @Query("DELETE FROM ProductCategoryMappingEntity m WHERE m.product.id = :productId")
     void deleteByProductId(@Param("productId") Integer productId);
 
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("DELETE FROM ProductCategoryMappingEntity m WHERE m.category.id = :categoryId")
+    void deleteByCategoryId(@Param("categoryId") Integer categoryId);
+
+    List<ProductCategoryMappingEntity> findByCategoryId(Integer categoryId);
+    long countByCategoryId(Integer categoryId);
     boolean existsByCategoryId(Integer categoryId);
     boolean existsByProductIdAndCategoryId(Integer productId, Integer categoryId);
 }
