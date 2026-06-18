@@ -187,6 +187,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     private List<ProductCategoryEntity> loadSiblings(Integer parentId, Integer excludeId) {
         List<ProductCategoryEntity> siblings = new ArrayList<>(categoryRepository.findAll().stream()
+                .filter(c -> !c.isDeleted())
                 .filter(c -> Objects.equals(parentKey(c), parentId))
                 .filter(c -> excludeId == null || !Objects.equals(c.getId(), excludeId))
                 .sorted(Comparator
