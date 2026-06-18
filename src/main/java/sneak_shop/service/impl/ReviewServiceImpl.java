@@ -20,6 +20,8 @@ import sneak_shop.service.NotificationService;
 
 import java.time.Instant;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
@@ -58,8 +60,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<ReviewResponse> getAll(int page, int size) {
-        return PageResponse.from(reviewRepository.findByProductDeletedFalseOrderByCreatedAtDesc(
+    public PageResponse<ReviewResponse> getAll(int page, int size, Integer rating, LocalDate fromDate, LocalDate toDate) {
+        ZoneId vn = ZoneId.of("Asia/Ho_Chi_Minh");
+        Instant fromInstant = fromDate != null ? fromDate.atStartOfDay(vn).toInstant() : null;
+        Instant toInstant = toDate != null ? toDate.plusDays(1).atStartOfDay(vn).toInstant() : null;
+        return PageResponse.from(reviewRepository.adminSearch(rating, fromInstant, toInstant,
                 PageRequest.of(page, size)).map(ReviewResponse::from));
     }
 
