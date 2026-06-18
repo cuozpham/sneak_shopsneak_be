@@ -105,22 +105,47 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     public long countProducts(Integer id) {
-        return mappingRepository.countByCategoryId(id);
+        return collectIdsWithDescendants(id).stream()
+                .mapToLong(mappingRepository::countByCategoryId)
+                .sum();
     }
 
     public void delete(Integer id) {
-        ProductCategoryEntity entity = categoryRepository.findById(id)
+        categoryRepository.findById(id)
                 .filter(c -> !c.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai"));
 
-        mappingRepository.deleteByCategoryId(id);
+        List<Integer> ids = collectIdsWithDescendants(id);
+        List<ProductCategoryEntity> entities = categoryRepository.findAllById(ids);
+        for (ProductCategoryEntity entity : entities) {
+            mappingRepository.deleteByCategoryId(entity.getId());
+            entity.setDeleted(true);
 
-        entity.setDeleted(true);
-        categoryRepository.save(entity);
+            List<BannerEntity> banners = bannerRepository.findAllByCategoryIdOrderBySortOrderAscIdDesc(entity.getId());
+            if (banners != null && !banners.isEmpty()) {
+                bannerRepository.deleteAll(banners);
+            }
+        }
+        categoryRepository.saveAll(entities);
+    }
 
-        List<BannerEntity> banners = bannerRepository.findAllByCategoryIdOrderBySortOrderAscIdDesc(id);
-        if (banners != null && !banners.isEmpty()) {
-            bannerRepository.deleteAll(banners);
+    private List<Integer> collectIdsWithDescendants(Integer rootId) {
+        List<ProductCategoryEntity> active = categoryRepository.findAll().stream()
+                .filter(c -> !c.isDeleted())
+                .toList();
+        List<Integer> ids = new ArrayList<>();
+        ids.add(rootId);
+        collectDescendants(rootId, active, ids);
+        return ids;
+    }
+
+    private void collectDescendants(Integer parentId, List<ProductCategoryEntity> all, List<Integer> target) {
+        for (ProductCategoryEntity category : all) {
+            if (category.getParent() != null && parentId.equals(category.getParent().getId())
+                    && !target.contains(category.getId())) {
+                target.add(category.getId());
+                collectDescendants(category.getId(), all, target);
+            }
         }
     }
 
