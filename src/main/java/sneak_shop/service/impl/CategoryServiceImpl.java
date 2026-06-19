@@ -65,7 +65,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     public CategoryResponse create(CategoryRequest req) {
         if (categoryRepository.existsBySlug(req.slug())) {
-            throw new AppException(ErrorCode.CONFLICT, "Slug da ton tai");
+            throw new AppException(ErrorCode.CONFLICT, "Đã có danh mục trùng tên này, vui lòng lấy tên danh mục khác");
         }
         ProductCategoryEntity parent = resolveParent(req.parentId(), null);
 
@@ -85,7 +85,7 @@ public class CategoryServiceImpl implements CategoryService {
         Integer oldParentId = parentKey(entity);
 
         if (!entity.getSlug().equals(req.slug()) && categoryRepository.existsBySlug(req.slug())) {
-            throw new AppException(ErrorCode.CONFLICT, "Slug da ton tai");
+            throw new AppException(ErrorCode.CONFLICT, "Đã có danh mục trùng tên này, vui lòng lấy tên danh mục khác");
         }
 
         ProductCategoryEntity parent = resolveParent(req.parentId(), id);
