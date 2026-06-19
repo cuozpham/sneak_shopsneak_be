@@ -97,7 +97,7 @@ public class ProductEntity {
 
     @Column(name = "rating_average", precision = 5, scale = 3)
     @Builder.Default
-    private java.math.BigDecimal ratingAverage = java.math.BigDecimal.ZERO;
+    private java.math.BigDecimal ratingAverage = java.math.BigDecimal.valueOf(5);
 
     @Column(name = "review_count", nullable = false)
     @Builder.Default

@@ -199,7 +199,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
         product.setDeleted(true);
-        product.setStatus(ProductStatus.deleted);
+        product.setStatus(ProductStatus.inactive);
         product.setUpdatedBy(currentUser());
         productRepository.save(product);
     }
@@ -222,7 +222,7 @@ public class ProductServiceImpl implements ProductService {
                 .filter(ProductEntity::isDeleted)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai hoac chua bi xoa"));
         product.setDeleted(false);
-        product.setStatus(ProductStatus.inactive);
+        product.setStatus(ProductStatus.active);
         product.setUpdatedBy(currentUser());
         productRepository.save(product);
     }
@@ -325,8 +325,7 @@ public class ProductServiceImpl implements ProductService {
     private ProductResponse toFullResponse(ProductEntity product, ProductMetricsContext metrics) {
         Integer productId = product.getId();
         ProductShopEntity shop = product.getShop();
-        double ratingAverage = metrics.avgRatingByProductId().getOrDefault(productId,
-                product.getRatingAverage() != null ? product.getRatingAverage().doubleValue() : 0d);
+        double ratingAverage = metrics.avgRatingByProductId().getOrDefault(productId, 5d);
         long reviewCount = metrics.reviewCountByProductId().getOrDefault(productId,
                 product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L);
         List<CategorySummary> categories = product.getCategoryMappings().stream()
@@ -379,8 +378,7 @@ public class ProductServiceImpl implements ProductService {
     private ProductResponse toListResponse(ProductEntity product, Map<Integer, List<String>> colorsByProductId, ProductMetricsContext metrics) {
         Integer productId = product.getId();
         ProductShopEntity shop = product.getShop();
-        double ratingAverage = metrics.avgRatingByProductId().getOrDefault(productId,
-                product.getRatingAverage() != null ? product.getRatingAverage().doubleValue() : 0d);
+        double ratingAverage = metrics.avgRatingByProductId().getOrDefault(productId, 5d);
         long reviewCount = metrics.reviewCountByProductId().getOrDefault(productId,
                 product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L);
         List<CategorySummary> categories = product.getCategoryMappings().stream()
