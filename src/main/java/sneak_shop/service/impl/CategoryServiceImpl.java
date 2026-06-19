@@ -38,7 +38,9 @@ public class CategoryServiceImpl implements CategoryService {
 
     public List<CategoryResponse> getAll() {
         return categoryRepository.findByStatusOrderBySortOrderAsc(CategoryStatus.active)
-                .stream().filter(c -> !c.isDeleted()).map(CategoryResponse::from).toList();
+                .stream().filter(c -> !c.isDeleted())
+                .map(c -> CategoryResponse.from(c, mappingRepository.countByCategoryId(c.getId())))
+                .toList();
     }
 
     public List<CategoryResponse> adminGetAll() {

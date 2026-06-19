@@ -13,13 +13,18 @@ public record CategoryResponse(
         String parentName,
         Integer sortOrder,
         CategoryStatus status,
-        boolean deleted
+        boolean deleted,
+        long productCount
 ) {
     public static CategoryResponse from(ProductCategoryEntity e) {
+        return from(e, 0);
+    }
+
+    public static CategoryResponse from(ProductCategoryEntity e, long productCount) {
         return new CategoryResponse(e.getId(), e.getName(), e.getSlug(), e.getDescription(),
                 e.getImageUrl(),
                 e.getParent() != null ? e.getParent().getId() : null,
                 e.getParent() != null ? e.getParent().getName() : null,
-                e.getSortOrder(), e.getStatus(), e.isDeleted());
+                e.getSortOrder(), e.getStatus(), e.isDeleted(), productCount);
     }
 }
