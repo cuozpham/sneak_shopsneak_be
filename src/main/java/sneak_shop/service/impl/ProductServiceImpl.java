@@ -69,7 +69,8 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public PageResponse<ProductResponse> search(
             String keyword, BigDecimal minPrice, BigDecimal maxPrice,
-            Integer categoryId, ProductStatus status, int page, int size, String sort
+            Integer categoryId, String variantSize, Double minRating,
+            ProductStatus status, int page, int size, String sort
     ) {
         String statusStr = status != null ? status.name() : null;
 
@@ -91,13 +92,14 @@ public class ProductServiceImpl implements ProductService {
 
         final int hasCatParam = hasCategory;
         final List<Integer> catIdsParam = categoryIds;
+        final String normalizedSize = (variantSize != null && !variantSize.isBlank()) ? variantSize.trim() : null;
 
         Page<ProductEntity> pageResult = switch (sort) {
-            case "price_asc" -> productRepository.searchPriceAsc(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
-            case "price_desc" -> productRepository.searchPriceDesc(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
-            case "sold" -> productRepository.searchSortBySold(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
-            case "rating" -> productRepository.searchSortByRating(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
-            default -> productRepository.searchNewest(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, PageRequest.of(page, size));
+            case "price_asc" -> productRepository.searchPriceAsc(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, normalizedSize, minRating, PageRequest.of(page, size));
+            case "price_desc" -> productRepository.searchPriceDesc(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, normalizedSize, minRating, PageRequest.of(page, size));
+            case "sold" -> productRepository.searchSortBySold(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, normalizedSize, minRating, PageRequest.of(page, size));
+            case "rating" -> productRepository.searchSortByRating(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, normalizedSize, minRating, PageRequest.of(page, size));
+            default -> productRepository.searchNewest(statusStr, minPrice, maxPrice, keyword, hasCatParam, catIdsParam, normalizedSize, minRating, PageRequest.of(page, size));
         };
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
         ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());

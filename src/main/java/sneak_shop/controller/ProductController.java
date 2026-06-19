@@ -29,6 +29,8 @@ public class ProductController {
             @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(required = false) Integer categoryId,
             @RequestParam(required = false) String categorySlug,
+            @RequestParam(required = false) String variantSize,
+            @RequestParam(required = false) Double minRating,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "newest") String sort
@@ -39,7 +41,7 @@ public class ProductController {
                     .map(c -> c.getId()).orElse(null);
         }
         return ApiResponse.ok(productService.search(keyword, minPrice, maxPrice, resolvedCategoryId,
-                ProductStatus.active, page, size, sort));
+                variantSize, minRating, ProductStatus.active, page, size, sort));
     }
 
     @GetMapping("/slug/{slug}")
