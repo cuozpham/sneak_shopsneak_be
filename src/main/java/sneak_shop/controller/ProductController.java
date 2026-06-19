@@ -4,7 +4,6 @@ import org.springframework.web.bind.annotation.*;
 import sneak_shop.common.response.ApiResponse;
 import sneak_shop.common.response.PageResponse;
 import sneak_shop.dto.response.ProductResponse;
-import sneak_shop.enums.ProductStatus;
 import sneak_shop.repository.ProductCategoryRepository;
 import sneak_shop.service.impl.ProductServiceImpl;
 
@@ -41,7 +40,7 @@ public class ProductController {
                     .map(c -> c.getId()).orElse(null);
         }
         return ApiResponse.ok(productService.search(keyword, minPrice, maxPrice, resolvedCategoryId,
-                variantSize, minRating, ProductStatus.active, page, size, sort));
+                variantSize, minRating, page, size, sort));
     }
 
     @GetMapping("/slug/{slug}")
