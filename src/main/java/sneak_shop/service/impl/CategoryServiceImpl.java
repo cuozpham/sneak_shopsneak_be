@@ -17,8 +17,12 @@ import sneak_shop.repository.BannerRepository;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Queue;
 
 @Transactional
 @Service
@@ -135,10 +139,45 @@ public class CategoryServiceImpl implements CategoryService {
         ProductCategoryEntity entity = categoryRepository.findById(id)
                 .filter(ProductCategoryEntity::isDeleted)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai trong thung rac"));
-        entity.setDeleted(false);
-        entity = categoryRepository.save(entity);
+
+        if (entity.getParent() != null && entity.getParent().isDeleted()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST,
+                    "Bạn cần khôi phục danh mục cha \"" + entity.getParent().getName() + "\" trước");
+        }
+
+        List<ProductCategoryEntity> all = categoryRepository.findAll();
+        List<ProductCategoryEntity> toRestore = collectDeletedWithDescendants(id, all);
+        for (ProductCategoryEntity cat : toRestore) {
+            cat.setDeleted(false);
+        }
+        categoryRepository.saveAll(toRestore);
+
         reposition(entity, entity.getParent(), null, id);
         return CategoryResponse.from(entity);
+    }
+
+    private List<ProductCategoryEntity> collectDeletedWithDescendants(Integer rootId, List<ProductCategoryEntity> all) {
+        Map<Integer, ProductCategoryEntity> byId = new HashMap<>();
+        Map<Integer, List<Integer>> childrenByParentId = new HashMap<>();
+        for (ProductCategoryEntity c : all) {
+            byId.put(c.getId(), c);
+            if (c.getParent() != null) {
+                childrenByParentId.computeIfAbsent(c.getParent().getId(), k -> new ArrayList<>()).add(c.getId());
+            }
+        }
+
+        List<ProductCategoryEntity> result = new ArrayList<>();
+        Queue<Integer> queue = new LinkedList<>();
+        queue.add(rootId);
+
+        while (!queue.isEmpty()) {
+            Integer currentId = queue.poll();
+            ProductCategoryEntity current = byId.get(currentId);
+            if (current == null || !current.isDeleted()) continue;
+            result.add(current);
+            queue.addAll(childrenByParentId.getOrDefault(currentId, List.of()));
+        }
+        return result;
     }
 
     private List<Integer> collectIdsWithDescendants(Integer rootId) {
