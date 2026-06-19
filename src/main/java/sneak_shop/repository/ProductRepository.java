@@ -25,7 +25,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             ORDER BY p.created_at DESC, p.id DESC
             """,
@@ -38,7 +37,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             """,
             nativeQuery = true)
@@ -48,7 +46,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("keyword") String keyword,
             @Param("hasCategory") int hasCategory,
             @Param("categoryIds") Collection<Integer> categoryIds,
-            @Param("variantSize") String variantSize,
             @Param("minRating") Double minRating,
             Pageable pageable
     );
@@ -62,7 +59,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             ORDER BY p.price ASC, p.id DESC
             """,
@@ -75,7 +71,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             """,
             nativeQuery = true)
@@ -85,7 +80,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("keyword") String keyword,
             @Param("hasCategory") int hasCategory,
             @Param("categoryIds") Collection<Integer> categoryIds,
-            @Param("variantSize") String variantSize,
             @Param("minRating") Double minRating,
             Pageable pageable
     );
@@ -99,7 +93,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             ORDER BY p.price DESC, p.id DESC
             """,
@@ -112,7 +105,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             """,
             nativeQuery = true)
@@ -122,7 +114,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("keyword") String keyword,
             @Param("hasCategory") int hasCategory,
             @Param("categoryIds") Collection<Integer> categoryIds,
-            @Param("variantSize") String variantSize,
             @Param("minRating") Double minRating,
             Pageable pageable
     );
@@ -165,7 +156,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             ORDER BY (SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi WHERE oi.product_id = p.id) DESC
             """,
@@ -178,7 +168,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             """,
             nativeQuery = true)
@@ -188,7 +177,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("keyword") String keyword,
             @Param("hasCategory") int hasCategory,
             @Param("categoryIds") Collection<Integer> categoryIds,
-            @Param("variantSize") String variantSize,
             @Param("minRating") Double minRating,
             Pageable pageable
     );
@@ -202,7 +190,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             ORDER BY (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) DESC
             """,
@@ -215,7 +202,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:variantSize IS NULL OR EXISTS (SELECT 1 FROM product_variants pv WHERE pv.product_id = p.id AND LOWER(pv.size) = LOWER(:variantSize)))
               AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
             """,
             nativeQuery = true)
@@ -225,7 +211,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("keyword") String keyword,
             @Param("hasCategory") int hasCategory,
             @Param("categoryIds") Collection<Integer> categoryIds,
-            @Param("variantSize") String variantSize,
             @Param("minRating") Double minRating,
             Pageable pageable
     );

@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 
 public interface ProductService {
     PageResponse<ProductResponse> search(String keyword, BigDecimal minPrice, BigDecimal maxPrice,
-                                         Integer categoryId, String variantSize, Double minRating,
+                                         Integer categoryId, Double minRating,
                                          int page, int size, String sort);
     ProductResponse getBySlug(String slug);
     ProductResponse getById(Integer id);
