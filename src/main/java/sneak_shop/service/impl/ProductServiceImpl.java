@@ -76,13 +76,9 @@ public class ProductServiceImpl implements ProductService {
         int hasCategory = 0;
         if (categoryId != null) {
             categoryIds.add(categoryId);
-            try {
-                List<ProductCategoryEntity> allCategories = categoryRepository.findByStatusOrderBySortOrderAsc(sneak_shop.enums.CategoryStatus.active)
-                        .stream().filter(c -> !c.isDeleted()).toList();
-                collectDescendants(categoryId, allCategories, categoryIds);
-            } catch (Exception e) {
-                // Fallback to single category
-            }
+            List<ProductCategoryEntity> allCategories = categoryRepository.findAll()
+                    .stream().filter(c -> !c.isDeleted()).toList();
+            collectDescendants(categoryId, allCategories, categoryIds);
             hasCategory = 1;
         } else {
             categoryIds.add(0);
