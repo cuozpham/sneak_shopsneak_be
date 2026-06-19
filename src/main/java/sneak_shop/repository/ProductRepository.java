@@ -25,7 +25,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             ORDER BY p.created_at DESC, p.id DESC
             """,
             countQuery = """
@@ -37,7 +37,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchNewest(
@@ -59,7 +59,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             ORDER BY p.price ASC, p.id DESC
             """,
             countQuery = """
@@ -71,7 +71,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchPriceAsc(
@@ -93,7 +93,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             ORDER BY p.price DESC, p.id DESC
             """,
             countQuery = """
@@ -105,7 +105,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchPriceDesc(
@@ -156,7 +156,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             ORDER BY (SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi WHERE oi.product_id = p.id) DESC
             """,
             countQuery = """
@@ -168,7 +168,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchSortBySold(
@@ -190,7 +190,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             ORDER BY (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) DESC
             """,
             countQuery = """
@@ -202,7 +202,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
-              AND (:minRating IS NULL OR (SELECT COALESCE(AVG(r.rating), 0) FROM reviews r WHERE r.product_id = p.id) >= :minRating)
+              AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
             """,
             nativeQuery = true)
     Page<ProductEntity> searchSortByRating(
