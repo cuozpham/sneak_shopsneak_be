@@ -27,6 +27,8 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
             LEFT JOIN users u ON u.id = o.user_id
             WHERE (:status IS NULL OR o.status = :status)
               AND (:keyword IS NULL OR
+                   LOWER(COALESCE(o.order_code, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(COALESCE(o.recipient_name, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
                    LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
                    COALESCE(u.phone_number, '') LIKE CONCAT('%', :keyword, '%') OR
                    COALESCE(o.recipient_phone, '') LIKE CONCAT('%', :keyword, '%'))
@@ -37,6 +39,8 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
             LEFT JOIN users u ON u.id = o.user_id
             WHERE (:status IS NULL OR o.status = :status)
               AND (:keyword IS NULL OR
+                   LOWER(COALESCE(o.order_code, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
+                   LOWER(COALESCE(o.recipient_name, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
                    LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
                    COALESCE(u.phone_number, '') LIKE CONCAT('%', :keyword, '%') OR
                    COALESCE(o.recipient_phone, '') LIKE CONCAT('%', :keyword, '%'))
