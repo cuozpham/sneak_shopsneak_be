@@ -50,4 +50,10 @@ public class AdminCategoryController {
         categoryService.delete(id);
         return ApiResponse.ok("Xoa danh muc thanh cong");
     }
+
+    @PutMapping("/{id}/restore")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ApiResponse<CategoryResponse> restore(@PathVariable Integer id) {
+        return ApiResponse.ok("Khoi phuc danh muc thanh cong", categoryService.restore(id));
+    }
 }

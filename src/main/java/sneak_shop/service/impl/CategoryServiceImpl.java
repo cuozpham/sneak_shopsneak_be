@@ -119,7 +119,6 @@ public class CategoryServiceImpl implements CategoryService {
         List<Integer> ids = collectIdsWithDescendants(id);
         List<ProductCategoryEntity> entities = categoryRepository.findAllById(ids);
         for (ProductCategoryEntity entity : entities) {
-            mappingRepository.deleteByCategoryId(entity.getId());
             entity.setDeleted(true);
 
             List<BannerEntity> banners = bannerRepository.findAllByCategoryIdOrderBySortOrderAscIdDesc(entity.getId());
@@ -128,6 +127,16 @@ public class CategoryServiceImpl implements CategoryService {
             }
         }
         categoryRepository.saveAll(entities);
+    }
+
+    public CategoryResponse restore(Integer id) {
+        ProductCategoryEntity entity = categoryRepository.findById(id)
+                .filter(ProductCategoryEntity::isDeleted)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai trong thung rac"));
+        entity.setDeleted(false);
+        entity = categoryRepository.save(entity);
+        reposition(entity, entity.getParent(), null, id);
+        return CategoryResponse.from(entity);
     }
 
     private List<Integer> collectIdsWithDescendants(Integer rootId) {
