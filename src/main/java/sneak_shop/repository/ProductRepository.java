@@ -20,7 +20,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT DISTINCT p.* FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -32,7 +32,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT COUNT(DISTINCT p.id) FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -54,7 +54,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT DISTINCT p.* FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -66,7 +66,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT COUNT(DISTINCT p.id) FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -88,7 +88,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT DISTINCT p.* FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -100,7 +100,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT COUNT(DISTINCT p.id) FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -121,6 +121,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
     @Query(value = """
             SELECT p.* FROM products p
             WHERE (:deleted IS NULL OR p.is_deleted = :deleted)
+              AND (p.is_deleted = true OR p.status != 'inactive')
               AND (:status IS NULL OR p.status = :status)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
             ORDER BY p.created_at DESC, p.id DESC
@@ -128,6 +129,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             countQuery = """
             SELECT COUNT(p.id) FROM products p
             WHERE (:deleted IS NULL OR p.is_deleted = :deleted)
+              AND (p.is_deleted = true OR p.status != 'inactive')
               AND (:status IS NULL OR p.status = :status)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
             """,
@@ -151,7 +153,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT DISTINCT p.* FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -163,7 +165,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT COUNT(DISTINCT p.id) FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -185,7 +187,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT DISTINCT p.* FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -197,7 +199,7 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT COUNT(DISTINCT p.id) FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status NOT IN ('inactive', 'deleted')
+              AND p.status != 'inactive'
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
