@@ -121,7 +121,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
     @Query(value = """
             SELECT p.* FROM products p
             WHERE (:deleted IS NULL OR p.is_deleted = :deleted)
-              AND (p.is_deleted = true OR p.status != 'inactive')
               AND (:status IS NULL OR p.status = :status)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
             ORDER BY p.created_at DESC, p.id DESC
@@ -129,7 +128,6 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             countQuery = """
             SELECT COUNT(p.id) FROM products p
             WHERE (:deleted IS NULL OR p.is_deleted = :deleted)
-              AND (p.is_deleted = true OR p.status != 'inactive')
               AND (:status IS NULL OR p.status = :status)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
             """,
