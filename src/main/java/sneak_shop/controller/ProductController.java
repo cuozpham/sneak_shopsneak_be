@@ -30,7 +30,7 @@ public class ProductController {
             @RequestParam(required = false) String categorySlug,
             @RequestParam(required = false) Double minRating,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "newest") String sort
     ) {
         Integer resolvedCategoryId = categoryId;
