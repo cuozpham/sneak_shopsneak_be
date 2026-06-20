@@ -100,8 +100,8 @@ public class AuthController {
         return ApiResponse.ok("Đăng nhập thành công", authService.login(request));
     }
 
-    @PostMapping("/google")
-    public ApiResponse<AuthResponse> googleLogin(@Valid @RequestBody GoogleAuthRequest req) {
+    @PostMapping("/google/login")
+    public ApiResponse<AuthResponse> googleLogin(@RequestBody GoogleAuthRequest req) {
         return ApiResponse.ok("Đăng nhập thành công", authService.googleLogin(req.idToken(), req.accessToken()));
     }
 
