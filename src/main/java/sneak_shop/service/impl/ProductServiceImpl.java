@@ -325,6 +325,7 @@ public class ProductServiceImpl implements ProductService {
         long reviewCount = metrics.reviewCountByProductId().getOrDefault(productId,
                 product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L);
         List<CategorySummary> categories = product.getCategoryMappings().stream()
+                .filter(m -> !m.getCategory().isDeleted())
                 .map(m -> new CategorySummary(
                         m.getCategory().getId(),
                         m.getCategory().getName(),
@@ -378,6 +379,7 @@ public class ProductServiceImpl implements ProductService {
         long reviewCount = metrics.reviewCountByProductId().getOrDefault(productId,
                 product.getReviewCount() != null ? product.getReviewCount().longValue() : 0L);
         List<CategorySummary> categories = product.getCategoryMappings().stream()
+                .filter(m -> !m.getCategory().isDeleted())
                 .map(m -> new CategorySummary(
                         m.getCategory().getId(),
                         m.getCategory().getName(),
