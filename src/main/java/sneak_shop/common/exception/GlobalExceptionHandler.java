@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -54,6 +55,15 @@ public class GlobalExceptionHandler {
 		return ResponseEntity
 				.status(errorCode.getStatus())
 				.body(ErrorResponse.of(errorCode, errorCode.getMessage(), request.getRequestURI(), details));
+	}
+
+	@ExceptionHandler(DataAccessException.class)
+	public ResponseEntity<ErrorResponse> handleDataAccess(DataAccessException exception, HttpServletRequest request) {
+		log.warn("Database error on {}: {}", request.getRequestURI(), exception.getMessage());
+		ErrorCode errorCode = ErrorCode.INVALID_REQUEST;
+		return ResponseEntity
+				.status(errorCode.getStatus())
+				.body(ErrorResponse.of(errorCode, "Yeu cau khong the xu ly do xung dot du lieu, vui long thu lai", request.getRequestURI(), null));
 	}
 
 	@ExceptionHandler(AccessDeniedException.class)
