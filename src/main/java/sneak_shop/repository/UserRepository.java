@@ -40,22 +40,24 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     @Query(value = """
             SELECT u.* FROM users u
-            WHERE (:keyword IS NULL OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                OR LOWER(COALESCE(u.username, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                OR LOWER(COALESCE(u.full_name, '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            WHERE (:keyword IS NULL OR LOWER(COALESCE(u.email, '')) LIKE CONCAT('%', :keyword, '%')
+                OR LOWER(COALESCE(u.username, '')) LIKE CONCAT('%', :keyword, '%')
+                OR LOWER(COALESCE(u.full_name, '')) LIKE CONCAT('%', :keyword, '%')
+                OR COALESCE(u.phone, '') LIKE CONCAT('%', :keyword, '%'))
               AND (:role IS NULL OR u.role = :role)
             ORDER BY u.created_at DESC, u.id DESC
             """,
             countQuery = """
             SELECT COUNT(u.id) FROM users u
-            WHERE (:keyword IS NULL OR LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                OR LOWER(COALESCE(u.username, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                OR LOWER(COALESCE(u.full_name, '')) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            WHERE (:keyword IS NULL OR LOWER(COALESCE(u.email, '')) LIKE CONCAT('%', :keyword, '%')
+                OR LOWER(COALESCE(u.username, '')) LIKE CONCAT('%', :keyword, '%')
+                OR LOWER(COALESCE(u.full_name, '')) LIKE CONCAT('%', :keyword, '%')
+                OR COALESCE(u.phone, '') LIKE CONCAT('%', :keyword, '%'))
               AND (:role IS NULL OR u.role = :role)
             """,
             nativeQuery = true)
     Page<UserEntity> search(@Param("keyword") String keyword,
-                            @Param("role") UserRole role,
+                            @Param("role") String role,
                             Pageable pageable);
 
     @Query("SELECT COUNT(u) FROM UserEntity u WHERE u.createdAt >= :from AND u.createdAt < :to")
