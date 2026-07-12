@@ -43,7 +43,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
             WHERE (LOWER(COALESCE(u.email, '')) LIKE :kw
                 OR LOWER(COALESCE(u.username, '')) LIKE :kw
                 OR LOWER(COALESCE(u.full_name, '')) LIKE :kw
-                OR COALESCE(u.phone, '') LIKE :kw)
+                OR COALESCE(u.phone_number, '') LIKE :kw)
               AND (:role IS NULL OR u.role = :role)
             ORDER BY u.created_at DESC, u.id DESC
             """,
@@ -52,7 +52,7 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
             WHERE (LOWER(COALESCE(u.email, '')) LIKE :kw
                 OR LOWER(COALESCE(u.username, '')) LIKE :kw
                 OR LOWER(COALESCE(u.full_name, '')) LIKE :kw
-                OR COALESCE(u.phone, '') LIKE :kw)
+                OR COALESCE(u.phone_number, '') LIKE :kw)
               AND (:role IS NULL OR u.role = :role)
             """,
             nativeQuery = true)
