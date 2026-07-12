@@ -22,6 +22,14 @@ public interface ProductVariantColorRepository extends JpaRepository<ProductVari
             """)
     List<Object[]> findColorNamesByProductIds(@Param("productIds") Collection<Integer> productIds);
 
+    @Query("""
+            SELECT c.variant.product.id, COALESCE(SUM(c.stockQuantity), 0)
+            FROM ProductVariantColorEntity c
+            WHERE c.variant.product.id IN :productIds
+            GROUP BY c.variant.product.id
+            """)
+    List<Object[]> sumStockByProductIds(@Param("productIds") Collection<Integer> productIds);
+
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM ProductVariantColorEntity c WHERE c.variant.id = :variantId")
     void deleteByVariantId(@Param("variantId") Integer variantId);

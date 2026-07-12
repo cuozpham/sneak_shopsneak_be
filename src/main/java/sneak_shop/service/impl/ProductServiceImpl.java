@@ -95,8 +95,9 @@ public class ProductServiceImpl implements ProductService {
             default -> productRepository.searchNewest(minPrice, maxPrice, keyword, hasCatParam, catIdsParam, minRating, PageRequest.of(page, size));
         };
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
+        Map<Integer, Integer> stockByProductId = loadStockByProductId(pageResult.getContent());
         ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
-        return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, metrics)));
+        return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, stockByProductId, metrics)));
     }
 
     private void collectDescendants(Integer parentId, List<ProductCategoryEntity> allCategories, List<Integer> targetList) {
@@ -208,8 +209,9 @@ public class ProductServiceImpl implements ProductService {
                 PageRequest.of(page, size)
         );
         Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pageResult.getContent());
+        Map<Integer, Integer> stockByProductId = loadStockByProductId(pageResult.getContent());
         ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
-        return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, metrics)));
+        return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, stockByProductId, metrics)));
     }
 
     @Transactional
@@ -348,12 +350,17 @@ public class ProductServiceImpl implements ProductService {
                 .map(img -> new MediaItem(img.getId(), img.getImageUrl(), img.getType()))
                 .toList();
 
+        int aggregatedStock = product.getVariants().stream()
+                .flatMap(v -> v.getColors().stream())
+                .mapToInt(c -> c.getStockQuantity() != null ? c.getStockQuantity() : 0)
+                .sum();
+        Integer effectiveStock = product.getVariants().isEmpty() ? product.getStockQuantity() : aggregatedStock;
         return new ProductResponse(
                 productId,
                 shop != null ? shop.getId() : null,
                 shop != null ? shop.getName() : null,
                 product.getName(), product.getSlug(), product.getDescription(),
-                product.getPrice(), product.getDiscountPercent(), product.getStockQuantity(),
+                product.getPrice(), product.getDiscountPercent(), effectiveStock,
                 product.getCoverImageUrl(), product.getSizeGuideNote(),
                 imageUrls.isEmpty() ? null : imageUrls,
                 product.getVariants().stream()
@@ -372,7 +379,7 @@ public class ProductServiceImpl implements ProductService {
                 product.isDeleted());
     }
 
-    private ProductResponse toListResponse(ProductEntity product, Map<Integer, List<String>> colorsByProductId, ProductMetricsContext metrics) {
+    private ProductResponse toListResponse(ProductEntity product, Map<Integer, List<String>> colorsByProductId, Map<Integer, Integer> stockByProductId, ProductMetricsContext metrics) {
         Integer productId = product.getId();
         ProductShopEntity shop = product.getShop();
         double ratingAverage = metrics.avgRatingByProductId().getOrDefault(productId, 5d);
@@ -391,12 +398,14 @@ public class ProductServiceImpl implements ProductService {
                 .map(img -> new MediaItem(img.getId(), img.getImageUrl(), img.getType()))
                 .toList();
 
+        Integer aggregatedStock = stockByProductId.get(productId);
+        Integer effectiveStock = aggregatedStock != null ? aggregatedStock : product.getStockQuantity();
         return new ProductResponse(
                 productId,
                 shop != null ? shop.getId() : null,
                 shop != null ? shop.getName() : null,
                 product.getName(), product.getSlug(), null,
-                product.getPrice(), product.getDiscountPercent(), product.getStockQuantity(),
+                product.getPrice(), product.getDiscountPercent(), effectiveStock,
                 product.getCoverImageUrl(), null,
                 mediaItems,
                 colorsByProductId.getOrDefault(productId, List.of()),
@@ -481,6 +490,22 @@ public class ProductServiceImpl implements ProductService {
                 .collect(Collectors.groupingBy(
                         row -> (Integer) row[0],
                         Collectors.mapping(row -> row[1] != null ? row[1].toString() : "", Collectors.toList())
+                ));
+    }
+
+    private Map<Integer, Integer> loadStockByProductId(Collection<ProductEntity> products) {
+        List<Integer> productIds = products == null ? List.of() : products.stream()
+                .filter(p -> p != null)
+                .map(ProductEntity::getId)
+                .distinct()
+                .toList();
+        if (productIds.isEmpty()) {
+            return Map.of();
+        }
+        return colorRepository.sumStockByProductIds(productIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Integer) row[0],
+                        row -> row[1] instanceof Number n ? n.intValue() : 0
                 ));
     }
 
