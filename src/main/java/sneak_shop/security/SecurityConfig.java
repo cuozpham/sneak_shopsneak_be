@@ -79,8 +79,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/shipping-fees/current").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/policies/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/cart").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/orders/checkout").permitAll()
                         .requestMatchers("/vqr/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/payments/momo/**").permitAll()
