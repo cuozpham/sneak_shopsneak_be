@@ -26,28 +26,26 @@ public interface OrderRepository extends JpaRepository<OrderEntity, Integer> {
             SELECT o.* FROM orders o
             LEFT JOIN users u ON u.id = o.user_id
             WHERE (:status IS NULL OR o.status = :status)
-              AND (:keyword IS NULL OR
-                   LOWER(COALESCE(o.order_code, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   LOWER(COALESCE(o.recipient_name, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   COALESCE(u.phone_number, '') LIKE CONCAT('%', :keyword, '%') OR
-                   COALESCE(o.recipient_phone, '') LIKE CONCAT('%', :keyword, '%'))
+              AND (LOWER(COALESCE(o.order_code, '')) LIKE :kw OR
+                   LOWER(COALESCE(o.recipient_name, '')) LIKE :kw OR
+                   LOWER(COALESCE(u.email, '')) LIKE :kw OR
+                   COALESCE(u.phone_number, '') LIKE :kw OR
+                   COALESCE(o.recipient_phone, '') LIKE :kw)
             ORDER BY o.created_at DESC, o.id DESC
             """,
             countQuery = """
             SELECT COUNT(o.id) FROM orders o
             LEFT JOIN users u ON u.id = o.user_id
             WHERE (:status IS NULL OR o.status = :status)
-              AND (:keyword IS NULL OR
-                   LOWER(COALESCE(o.order_code, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   LOWER(COALESCE(o.recipient_name, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   LOWER(COALESCE(u.email, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) OR
-                   COALESCE(u.phone_number, '') LIKE CONCAT('%', :keyword, '%') OR
-                   COALESCE(o.recipient_phone, '') LIKE CONCAT('%', :keyword, '%'))
+              AND (LOWER(COALESCE(o.order_code, '')) LIKE :kw OR
+                   LOWER(COALESCE(o.recipient_name, '')) LIKE :kw OR
+                   LOWER(COALESCE(u.email, '')) LIKE :kw OR
+                   COALESCE(u.phone_number, '') LIKE :kw OR
+                   COALESCE(o.recipient_phone, '') LIKE :kw)
             """,
             nativeQuery = true)
     Page<OrderEntity> searchByKeyword(@Param("status") String status,
-                                      @Param("keyword") String keyword,
+                                      @Param("kw") String kw,
                                       Pageable pageable);
     Long countByUserId(Integer userId);
     boolean existsByOrderCode(String orderCode);
