@@ -79,13 +79,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/shipping-fees/current").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/policies/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/user/profile").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/orders/checkout").permitAll()
                         .requestMatchers("/vqr/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/payments/momo/**").permitAll()
                         .requestMatchers("/api/payments/zalopay/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/public/upload").permitAll()
                         .requestMatchers("/api/user/**").hasAnyRole("USER", "ADMIN")
-                        .requestMatchers("/api/cart/**", "/api/orders/**", "/api/addresses/**",
+                        .requestMatchers("/api/cart/**", /* "/api/orders/**", */ "/api/addresses/**",
                                 "/api/reviews/**", "/api/notifications/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/chat/**").hasAnyRole("USER", "ADMIN")
                         .requestMatchers("/api/admin/chat/**").hasRole("ADMIN")

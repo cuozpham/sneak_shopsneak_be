@@ -25,8 +25,9 @@ public class OrderEntity {
     @Column(name = "order_code", nullable = false, unique = true, length = 50)
     private String orderCode;
 
+    // @JoinColumn(name = "user_id", nullable = false)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id")
     private UserEntity user;
 
     @ManyToOne(fetch = FetchType.LAZY)

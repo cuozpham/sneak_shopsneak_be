@@ -28,7 +28,7 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CheckoutResponse> checkout(@AuthenticationPrincipal UserContext ctx,
                                                   @Valid @RequestBody CheckoutRequest req) {
-        return ApiResponse.ok("Dat hang thanh cong", orderService.checkout(ctx.id(), req));
+        return ApiResponse.ok("Dat hang thanh cong", orderService.checkout(ctx != null ? ctx.id() : null, req));
     }
 
     @GetMapping

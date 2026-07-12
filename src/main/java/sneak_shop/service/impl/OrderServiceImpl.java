@@ -91,10 +91,17 @@ public class OrderServiceImpl implements OrderService {
 
     @Transactional
     public CheckoutResponse checkout(Integer userId, CheckoutRequest req) {
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "User khong ton tai"));
+        // UserEntity user = userRepository.findById(userId)
+        //         .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "User khong ton tai"));
+        UserEntity user = userId != null
+                ? userRepository.findById(userId)
+                        .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "User khong ton tai"))
+                : null;
 
         boolean isBuyNow = req.items() != null && !req.items().isEmpty();
+        if (user == null && !isBuyNow) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Khach vang lai phai gui items truc tiep");
+        }
         List<OrderItem> items = isBuyNow
                 ? buildBuyNowItems(req.items())
                 : buildCartItems(userId);
@@ -128,7 +135,12 @@ public class OrderServiceImpl implements OrderService {
         ProductShopEntity orderShop = resolveOrderShop(items);
 
         AddressEntity linkedAddress = null;
-        if (req.addressId() != null) {
+        // if (req.addressId() != null) {
+        //     linkedAddress = addressRepository.findById(req.addressId())
+        //             .filter(a -> a.getUser().getId().equals(userId))
+        //             .orElse(null);
+        // }
+        if (req.addressId() != null && userId != null) {
             linkedAddress = addressRepository.findById(req.addressId())
                     .filter(a -> a.getUser().getId().equals(userId))
                     .orElse(null);
@@ -187,12 +199,20 @@ public class OrderServiceImpl implements OrderService {
         notificationService.notifyAdmins(order, "Đơn hàng mới",
                 "Đơn hàng " + order.getOrderCode() + " vừa được tạo.",
                 "order_new", newOrderImage);
-        notificationService.notifyUser(userId, order, "Đặt hàng thành công",
-                "Đơn hàng " + order.getOrderCode() + " đã được tiếp nhận.",
-                "order_created", newOrderImage);
+        // notificationService.notifyUser(userId, order, "Đặt hàng thành công",
+        //         "Đơn hàng " + order.getOrderCode() + " đã được tiếp nhận.",
+        //         "order_created", newOrderImage);
+        if (userId != null) {
+            notificationService.notifyUser(userId, order, "Đặt hàng thành công",
+                    "Đơn hàng " + order.getOrderCode() + " đã được tiếp nhận.",
+                    "order_created", newOrderImage);
+        }
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_created"));
 
-        if (!isBuyNow) {
+        // if (!isBuyNow) {
+        //     cartItemRepository.deleteByUserId(userId);
+        // }
+        if (!isBuyNow && userId != null) {
             cartItemRepository.deleteByUserId(userId);
         }
 
@@ -212,8 +232,10 @@ public class OrderServiceImpl implements OrderService {
         }
 
         financialLogRepository.save(FinancialLogEntity.builder()
-                .email(user.getEmail())
-                .usersId(user.getId())
+                // .email(user.getEmail())
+                // .usersId(user.getId())
+                .email(user != null ? user.getEmail() : "guest+" + req.recipientPhone() + "@sneakshop.vn")
+                .usersId(user != null ? user.getId() : null)
                 .addressesId(linkedAddress != null ? linkedAddress.getId() : null)
                 .ordersId(order.getId())
                 .transactionsId(transaction != null ? transaction.getId() : null)
@@ -225,10 +247,21 @@ public class OrderServiceImpl implements OrderService {
                 .build());
 
         String paymentUrl = null;
-        if (req.paymentMethod() == PaymentMethod.momo) {
-            paymentUrl = momoPaymentService.createPaymentUrl(order, user);
-        } else if (req.paymentMethod() == PaymentMethod.zalopay) {
-            paymentUrl = zaloPayPaymentService.createPaymentUrl(order, user);
+        // if (req.paymentMethod() == PaymentMethod.momo) {
+        //     paymentUrl = momoPaymentService.createPaymentUrl(order, user);
+        // } else if (req.paymentMethod() == PaymentMethod.zalopay) {
+        //     paymentUrl = zaloPayPaymentService.createPaymentUrl(order, user);
+        // }
+        if (req.paymentMethod() == PaymentMethod.momo || req.paymentMethod() == PaymentMethod.zalopay) {
+            if (user == null) {
+                throw new AppException(ErrorCode.INVALID_REQUEST,
+                        "Khach vang lai chi ho tro thanh toan COD");
+            }
+            if (req.paymentMethod() == PaymentMethod.momo) {
+                paymentUrl = momoPaymentService.createPaymentUrl(order, user);
+            } else {
+                paymentUrl = zaloPayPaymentService.createPaymentUrl(order, user);
+            }
         }
 
         return new CheckoutResponse(toResponse(order), paymentUrl);
