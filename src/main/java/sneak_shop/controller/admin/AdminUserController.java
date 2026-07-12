@@ -70,7 +70,7 @@ public class AdminUserController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
-        String kw = keyword != null && !keyword.isBlank() ? keyword.toLowerCase() : null;
+        String kw = (keyword != null && !keyword.isBlank()) ? "%" + keyword.toLowerCase() + "%" : "%";
         String roleStr = role != null ? role.name() : null;
         var result = userRepository.search(kw, roleStr,
                 PageRequest.of(page, size));

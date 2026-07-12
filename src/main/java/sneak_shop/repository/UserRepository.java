@@ -40,23 +40,23 @@ public interface UserRepository extends JpaRepository<UserEntity, Integer> {
 
     @Query(value = """
             SELECT u.* FROM users u
-            WHERE (:keyword IS NULL OR LOWER(COALESCE(u.email, '')) LIKE CONCAT('%', :keyword, '%')
-                OR LOWER(COALESCE(u.username, '')) LIKE CONCAT('%', :keyword, '%')
-                OR LOWER(COALESCE(u.full_name, '')) LIKE CONCAT('%', :keyword, '%')
-                OR COALESCE(u.phone, '') LIKE CONCAT('%', :keyword, '%'))
+            WHERE (LOWER(COALESCE(u.email, '')) LIKE :kw
+                OR LOWER(COALESCE(u.username, '')) LIKE :kw
+                OR LOWER(COALESCE(u.full_name, '')) LIKE :kw
+                OR COALESCE(u.phone, '') LIKE :kw)
               AND (:role IS NULL OR u.role = :role)
             ORDER BY u.created_at DESC, u.id DESC
             """,
             countQuery = """
             SELECT COUNT(u.id) FROM users u
-            WHERE (:keyword IS NULL OR LOWER(COALESCE(u.email, '')) LIKE CONCAT('%', :keyword, '%')
-                OR LOWER(COALESCE(u.username, '')) LIKE CONCAT('%', :keyword, '%')
-                OR LOWER(COALESCE(u.full_name, '')) LIKE CONCAT('%', :keyword, '%')
-                OR COALESCE(u.phone, '') LIKE CONCAT('%', :keyword, '%'))
+            WHERE (LOWER(COALESCE(u.email, '')) LIKE :kw
+                OR LOWER(COALESCE(u.username, '')) LIKE :kw
+                OR LOWER(COALESCE(u.full_name, '')) LIKE :kw
+                OR COALESCE(u.phone, '') LIKE :kw)
               AND (:role IS NULL OR u.role = :role)
             """,
             nativeQuery = true)
-    Page<UserEntity> search(@Param("keyword") String keyword,
+    Page<UserEntity> search(@Param("kw") String kw,
                             @Param("role") String role,
                             Pageable pageable);
 
