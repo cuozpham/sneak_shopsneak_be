@@ -67,6 +67,22 @@ public class AdminProductController {
         return ApiResponse.ok("Khoi phuc san pham thanh cong");
     }
 
+    @PatchMapping("/{id}/featured")
+    @PreAuthorize("hasRole('ADMIN') or hasAuthority('PRODUCT_UPDATE')")
+    public ApiResponse<ProductResponse> setFeatured(
+            @PathVariable Integer id,
+            @RequestBody FeaturedRequest req
+    ) {
+        return ApiResponse.ok(productService.setFeatured(id, req.featured(), req.featuredOrder()));
+    }
+
+    @GetMapping("/featured")
+    public ApiResponse<PageResponse<ProductResponse>> listFeatured() {
+        return ApiResponse.ok(productService.adminListFeatured());
+    }
+
+    public record FeaturedRequest(boolean featured, Integer featuredOrder) {}
+
     @PostMapping("/{id}/variants")
     @PreAuthorize("hasRole('ADMIN') or hasAuthority('PRODUCT_UPDATE')")
     public ApiResponse<ProductResponse.VariantSummary> addVariant(@PathVariable Integer id,

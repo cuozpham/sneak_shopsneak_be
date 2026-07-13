@@ -6,6 +6,7 @@ import sneak_shop.dto.request.ProductVariantRequest;
 import sneak_shop.dto.response.ProductResponse;
 import sneak_shop.enums.ProductStatus;
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface ProductService {
     PageResponse<ProductResponse> search(String keyword, BigDecimal minPrice, BigDecimal maxPrice,
@@ -21,4 +22,7 @@ public interface ProductService {
     void delete(Integer id);
     ProductResponse.VariantSummary addVariant(Integer productId, ProductVariantRequest req);
     void deleteVariant(Integer productId, Integer variantId);
+    List<ProductResponse> getFeaturedHomepage();
+    ProductResponse setFeatured(Integer productId, boolean featured, Integer featuredOrder);
+    PageResponse<ProductResponse> adminListFeatured();
 }

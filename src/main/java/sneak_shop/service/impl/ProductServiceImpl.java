@@ -28,14 +28,17 @@ import java.math.RoundingMode;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,8 +55,9 @@ public class ProductServiceImpl implements ProductService {
     private final OrderItemRepository orderItemRepository;
     private final CartItemRepository cartItemRepository;
     private final ReviewRepository reviewRepository;
+    private final sneak_shop.config.FeaturedProductsConfig featuredConfig;
 
-    public ProductServiceImpl(ProductRepository productRepository, ProductShopRepository shopRepository, ProductCategoryRepository categoryRepository, ProductCategoryMappingRepository mappingRepository, ProductVariantRepository variantRepository, ProductVariantColorRepository colorRepository, ProductImageRepository imageRepository, OrderItemRepository orderItemRepository, CartItemRepository cartItemRepository, ReviewRepository reviewRepository) {
+    public ProductServiceImpl(ProductRepository productRepository, ProductShopRepository shopRepository, ProductCategoryRepository categoryRepository, ProductCategoryMappingRepository mappingRepository, ProductVariantRepository variantRepository, ProductVariantColorRepository colorRepository, ProductImageRepository imageRepository, OrderItemRepository orderItemRepository, CartItemRepository cartItemRepository, ReviewRepository reviewRepository, sneak_shop.config.FeaturedProductsConfig featuredConfig) {
         this.productRepository = productRepository;
         this.shopRepository = shopRepository;
         this.categoryRepository = categoryRepository;
@@ -64,6 +68,7 @@ public class ProductServiceImpl implements ProductService {
         this.orderItemRepository = orderItemRepository;
         this.cartItemRepository = cartItemRepository;
         this.reviewRepository = reviewRepository;
+        this.featuredConfig = featuredConfig;
     }
 
     @Transactional(readOnly = true)
@@ -212,6 +217,113 @@ public class ProductServiceImpl implements ProductService {
         Map<Integer, Integer> stockByProductId = loadStockByProductId(pageResult.getContent());
         ProductMetricsContext metrics = loadMetricsContext(pageResult.getContent());
         return PageResponse.from(pageResult.map(p -> toListResponse(p, colorsByProductId, stockByProductId, metrics)));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getFeaturedHomepage() {
+        int target = featuredConfig.getTotalDisplayed();
+        int maxPerCategory = featuredConfig.getMaxPerCategory();
+
+        List<ProductEntity> pinned = productRepository.findPinnedFeatured().stream()
+                .filter(p -> !p.isDeleted())
+                .filter(p -> hasStock(p))
+                .toList();
+
+        List<ProductEntity> selected = new ArrayList<>();
+        Map<Integer, Integer> categoryCount = new HashMap<>();
+        for (ProductEntity p : pinned) {
+            if (selected.size() >= target) break;
+            selected.add(p);
+            incrementCategoryCounts(p, categoryCount);
+        }
+
+        if (selected.size() < target) {
+            Instant since = Instant.now().minus(featuredConfig.getRecentSalesWindowDays(), ChronoUnit.DAYS);
+            Set<Integer> excluded = selected.stream().map(ProductEntity::getId).collect(Collectors.toSet());
+            if (excluded.isEmpty()) excluded = Set.of(-1);
+            int poolLimit = Math.max(target * 4, 30);
+            List<ProductEntity> candidates = productRepository.findAutoFeaturedCandidates(
+                    since, featuredConfig.getMinReviewsForRating(), excluded, poolLimit);
+            for (ProductEntity p : candidates) {
+                if (selected.size() >= target) break;
+                if (!hasStock(p)) continue;
+                if (exceedsCategoryCap(p, categoryCount, maxPerCategory)) continue;
+                selected.add(p);
+                incrementCategoryCounts(p, categoryCount);
+            }
+            if (selected.size() < target) {
+                Set<Integer> already = selected.stream().map(ProductEntity::getId).collect(Collectors.toSet());
+                for (ProductEntity p : candidates) {
+                    if (selected.size() >= target) break;
+                    if (already.contains(p.getId())) continue;
+                    if (!hasStock(p)) continue;
+                    selected.add(p);
+                }
+            }
+        }
+
+        Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(selected);
+        Map<Integer, Integer> stockByProductId = loadStockByProductId(selected);
+        ProductMetricsContext metrics = loadMetricsContext(selected);
+        return selected.stream()
+                .map(p -> toListResponse(p, colorsByProductId, stockByProductId, metrics))
+                .toList();
+    }
+
+    private boolean hasStock(ProductEntity product) {
+        if (product.getStockQuantity() != null && product.getStockQuantity() > 0) return true;
+        return product.getVariants() != null && product.getVariants().stream()
+                .flatMap(v -> v.getColors().stream())
+                .anyMatch(c -> c.getStockQuantity() != null && c.getStockQuantity() > 0);
+    }
+
+    private void incrementCategoryCounts(ProductEntity product, Map<Integer, Integer> counts) {
+        if (product.getCategoryMappings() == null) return;
+        product.getCategoryMappings().stream()
+                .map(m -> m.getCategory())
+                .filter(c -> c != null && !c.isDeleted())
+                .map(ProductCategoryEntity::getId)
+                .distinct()
+                .forEach(id -> counts.merge(id, 1, Integer::sum));
+    }
+
+    private boolean exceedsCategoryCap(ProductEntity product, Map<Integer, Integer> counts, int cap) {
+        if (product.getCategoryMappings() == null || product.getCategoryMappings().isEmpty()) return false;
+        return product.getCategoryMappings().stream()
+                .map(m -> m.getCategory())
+                .filter(c -> c != null && !c.isDeleted())
+                .anyMatch(c -> counts.getOrDefault(c.getId(), 0) >= cap);
+    }
+
+    @Transactional
+    public ProductResponse setFeatured(Integer productId, boolean featured, Integer featuredOrder) {
+        ProductEntity product = productRepository.findById(productId)
+                .filter(p -> !p.isDeleted())
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "San pham khong ton tai"));
+        if (featured && !product.isFeatured()) {
+            long currentPinned = productRepository.countByFeaturedTrue();
+            if (currentPinned >= featuredConfig.getMaxPinned()) {
+                throw new AppException(ErrorCode.INVALID_REQUEST,
+                        "Chi duoc ghim toi da " + featuredConfig.getMaxPinned() + " san pham");
+            }
+        }
+        product.setFeatured(featured);
+        product.setFeaturedOrder(featured ? featuredOrder : null);
+        product.setUpdatedBy(currentUser());
+        productRepository.save(product);
+        return toFullResponse(product, loadMetricsContext(List.of(product)));
+    }
+
+    @Transactional(readOnly = true)
+    public PageResponse<ProductResponse> adminListFeatured() {
+        List<ProductEntity> pinned = productRepository.findPinnedFeatured();
+        Map<Integer, List<String>> colorsByProductId = loadColorPreviewContext(pinned);
+        Map<Integer, Integer> stockByProductId = loadStockByProductId(pinned);
+        ProductMetricsContext metrics = loadMetricsContext(pinned);
+        List<ProductResponse> list = pinned.stream()
+                .map(p -> toListResponse(p, colorsByProductId, stockByProductId, metrics))
+                .toList();
+        return new PageResponse<>(list, 0, list.size(), list.size(), 1, true);
     }
 
     @Transactional
@@ -376,7 +488,9 @@ public class ProductServiceImpl implements ProductService {
                 ratingAverage,
                 reviewCount,
                 metrics.soldCountByProductId().getOrDefault(productId, 0L),
-                product.isDeleted());
+                product.isDeleted(),
+                product.isFeatured(),
+                product.getFeaturedOrder());
     }
 
     private ProductResponse toListResponse(ProductEntity product, Map<Integer, List<String>> colorsByProductId, Map<Integer, Integer> stockByProductId, ProductMetricsContext metrics) {
@@ -417,7 +531,9 @@ public class ProductServiceImpl implements ProductService {
                 ratingAverage,
                 reviewCount,
                 metrics.soldCountByProductId().getOrDefault(productId, 0L),
-                product.isDeleted());
+                product.isDeleted(),
+                product.isFeatured(),
+                product.getFeaturedOrder());
     }
 
     private List<BreadcrumbItem> buildBreadcrumb(ProductEntity product) {

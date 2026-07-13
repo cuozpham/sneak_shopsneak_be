@@ -9,7 +9,9 @@ import org.springframework.data.repository.query.Param;
 import sneak_shop.entity.ProductEntity;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<ProductEntity, Integer> {
@@ -213,5 +215,54 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             @Param("categoryIds") Collection<Integer> categoryIds,
             @Param("minRating") Double minRating,
             Pageable pageable
+    );
+
+    @Query(value = """
+            SELECT p.* FROM products p
+            WHERE p.is_deleted = false
+              AND p.status = 'active'
+              AND p.is_featured = 1
+              AND p.price > 0
+            ORDER BY COALESCE(p.featured_order, 999999) ASC, p.id DESC
+            """,
+            nativeQuery = true)
+    List<ProductEntity> findPinnedFeatured();
+
+    long countByFeaturedTrue();
+
+    @Query(value = """
+            SELECT p.* FROM products p
+            WHERE p.is_deleted = false
+              AND p.status = 'active'
+              AND p.price > 0
+              AND (:excludedIds IS NULL OR p.id NOT IN (:excludedIds))
+              AND (
+                  :minReviews = 0
+                  OR COALESCE(p.review_count, 0) >= :minReviews
+                  OR (
+                      SELECT COALESCE(SUM(oi.quantity), 0)
+                      FROM order_items oi
+                      JOIN orders o ON o.id = oi.order_id
+                      WHERE oi.product_id = p.id
+                        AND o.created_at >= :since
+                  ) > 0
+              )
+            ORDER BY (
+                SELECT COALESCE(SUM(oi.quantity), 0)
+                FROM order_items oi
+                JOIN orders o ON o.id = oi.order_id
+                WHERE oi.product_id = p.id
+                  AND o.created_at >= :since
+            ) DESC,
+            COALESCE(p.rating_average, 0) DESC,
+            p.created_at DESC
+            LIMIT :limit
+            """,
+            nativeQuery = true)
+    List<ProductEntity> findAutoFeaturedCandidates(
+            @Param("since") Instant since,
+            @Param("minReviews") int minReviews,
+            @Param("excludedIds") Collection<Integer> excludedIds,
+            @Param("limit") int limit
     );
 }

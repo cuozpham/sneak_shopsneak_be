@@ -42,6 +42,11 @@ public class ProductController {
                 minRating, page, size, sort));
     }
 
+    @GetMapping("/featured")
+    public ApiResponse<java.util.List<ProductResponse>> getFeatured() {
+        return ApiResponse.ok(productService.getFeaturedHomepage());
+    }
+
     @GetMapping("/slug/{slug}")
     public ApiResponse<ProductResponse> getBySlugPath(@PathVariable String slug) {
         return ApiResponse.ok(productService.getBySlug(slug));

@@ -107,6 +107,13 @@ public class ProductEntity {
     @Builder.Default
     private boolean deleted = false;
 
+    @Column(name = "is_featured", nullable = false)
+    @Builder.Default
+    private boolean featured = false;
+
+    @Column(name = "featured_order")
+    private Integer featuredOrder;
+
     @PreUpdate
     void onUpdate() {
         this.updatedAt = Instant.now();

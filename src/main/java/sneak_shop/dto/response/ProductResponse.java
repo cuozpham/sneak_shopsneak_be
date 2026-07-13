@@ -31,7 +31,9 @@ public record ProductResponse(
         Double ratingAverage,
         Long reviewCount,
         Long soldCount,
-        boolean deleted
+        boolean deleted,
+        boolean featured,
+        Integer featuredOrder
 ) {
     public record BreadcrumbItem(String label, String href) {}
     public record CategorySummary(Integer id, String name, String slug) {}
