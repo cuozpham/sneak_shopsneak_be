@@ -59,7 +59,18 @@ public class PasswordResetService {
                 + "    " + otp + "\n\n"
                 + "Mã có hiệu lực trong 5 phút. Nếu không phải bạn, vui lòng bỏ qua email này.\n\n"
                 + "MANDRO");
-        mailSender.send(msg);
+        sendMailAsync(msg);
+    }
+
+    private void sendMailAsync(SimpleMailMessage msg) {
+        java.util.concurrent.CompletableFuture.runAsync(() -> {
+            try {
+                mailSender.send(msg);
+            } catch (Exception ex) {
+                org.slf4j.LoggerFactory.getLogger(PasswordResetService.class)
+                        .warn("Failed to send mail to {}: {}", msg.getTo(), ex.getMessage());
+            }
+        });
     }
 
     public String confirmEmailChange(Integer userId, String newEmail, String otp) {
@@ -120,7 +131,7 @@ public class PasswordResetService {
                 + "    " + otp + "\n\n"
                 + "Mã có hiệu lực trong 5 phút. Không chia sẻ mã này với ai.\n\n"
                 + "MANDRO");
-        mailSender.send(msg);
+        sendMailAsync(msg);
     }
 
     public void verifyRegisterOtp(String email, String otp) {
@@ -158,7 +169,7 @@ public class PasswordResetService {
                 + "    " + otp + "\n\n"
                 + "Mã có hiệu lực trong 5 phút. Không chia sẻ mã này với ai.\n\n"
                 + "MANDRO");
-        mailSender.send(msg);
+        sendMailAsync(msg);
     }
 
     public void verifyEmailVerificationOtp(String email, String otp) {
@@ -200,7 +211,7 @@ public class PasswordResetService {
                 + "    " + otp + "\n\n"
                 + "Mã có hiệu lực trong 5 phút. Không chia sẻ mã này với ai.\n\n"
                 + "MANDRO");
-        mailSender.send(msg);
+        sendMailAsync(msg);
     }
 
     public String verifyOtp(String email, String otp) {
