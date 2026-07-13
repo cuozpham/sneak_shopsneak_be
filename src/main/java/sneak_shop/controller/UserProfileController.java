@@ -25,10 +25,14 @@ public class UserProfileController {
 
     private final UserRepository userRepository;
     private final CloudinaryStorageService cloudinaryStorageService;
+    private final sneak_shop.service.PasswordResetService passwordResetService;
 
-    public UserProfileController(UserRepository userRepository, CloudinaryStorageService cloudinaryStorageService) {
+    public UserProfileController(UserRepository userRepository,
+                                 CloudinaryStorageService cloudinaryStorageService,
+                                 sneak_shop.service.PasswordResetService passwordResetService) {
         this.userRepository = userRepository;
         this.cloudinaryStorageService = cloudinaryStorageService;
+        this.passwordResetService = passwordResetService;
     }
 
     @GetMapping("/me")
@@ -45,16 +49,7 @@ public class UserProfileController {
     ) {
         UserEntity user = userRepository.findById(ctx.id())
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "User khong ton tai"));
-        if (body.containsKey("email")) {
-            String email = normalize(body.get("email"));
-            if (email != null && userRepository.existsByEmailAndIdNot(email, user.getId())) {
-                throw new AppException(ErrorCode.CONFLICT, "Email da duoc su dung");
-            }
-            if (email != null && !email.equalsIgnoreCase(user.getEmail())) {
-                user.setEmailVerified(false);
-            }
-            user.setEmail(email);
-        }
+        // email không sửa qua endpoint này — dùng /profile/email/request và /profile/email/confirm
         if (body.containsKey("fullName") && body.get("fullName") != null && !body.get("fullName").isBlank())
             user.setFullName(body.get("fullName").trim());
         if (body.containsKey("phone"))
@@ -125,5 +120,24 @@ public class UserProfileController {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Ngay sinh khong duoc vuot qua ngay hien tai");
         }
         return parsed;
+    }
+
+    public record EmailChangeRequest(String email) {}
+    public record EmailChangeConfirm(String email, String otp) {}
+
+    @PostMapping("/profile/email/request")
+    public ApiResponse<Void> requestEmailChange(@AuthenticationPrincipal UserContext ctx,
+                                                @RequestBody EmailChangeRequest req) {
+        passwordResetService.sendEmailChangeOtp(ctx.id(), req.email());
+        return ApiResponse.ok("Da gui OTP toi email moi");
+    }
+
+    @PostMapping("/profile/email/confirm")
+    public ApiResponse<AuthResponse> confirmEmailChange(@AuthenticationPrincipal UserContext ctx,
+                                                        @RequestBody EmailChangeConfirm req) {
+        passwordResetService.confirmEmailChange(ctx.id(), req.email(), req.otp());
+        UserEntity user = userRepository.findById(ctx.id())
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "User khong ton tai"));
+        return ApiResponse.ok("Doi email thanh cong", AuthResponse.from(user));
     }
 }
