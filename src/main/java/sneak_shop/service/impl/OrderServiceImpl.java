@@ -492,7 +492,9 @@ public class OrderServiceImpl implements OrderService {
                 : "Đơn hàng " + order.getOrderCode() + " đã chuyển sang trạng thái " + readableStatus(req.status()) + ".";
         String adminNotifType = isCancelledByAdmin ? "order_cancelled" : "order_status";
         String adminUpdateImage = getOrderFirstImage(order);
-        notificationService.notifyUser(order.getUser().getId(), order, adminNotifTitle, adminNotifBody, adminNotifType, adminUpdateImage);
+        if (order.getUser() != null) {
+            notificationService.notifyUser(order.getUser().getId(), order, adminNotifTitle, adminNotifBody, adminNotifType, adminUpdateImage);
+        }
         realtimeSocketHub.afterCommit(() -> realtimeSocketHub.pushAdminDashboardRefresh("order_status_changed"));
         return toResponse(order);
     }
