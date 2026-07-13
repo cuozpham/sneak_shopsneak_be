@@ -25,14 +25,10 @@ public class UserProfileController {
 
     private final UserRepository userRepository;
     private final CloudinaryStorageService cloudinaryStorageService;
-    private final sneak_shop.service.PasswordResetService passwordResetService;
 
-    public UserProfileController(UserRepository userRepository,
-                                 CloudinaryStorageService cloudinaryStorageService,
-                                 sneak_shop.service.PasswordResetService passwordResetService) {
+    public UserProfileController(UserRepository userRepository, CloudinaryStorageService cloudinaryStorageService) {
         this.userRepository = userRepository;
         this.cloudinaryStorageService = cloudinaryStorageService;
-        this.passwordResetService = passwordResetService;
     }
 
     @GetMapping("/me")
@@ -122,22 +118,4 @@ public class UserProfileController {
         return parsed;
     }
 
-    public record EmailChangeRequest(String email) {}
-    public record EmailChangeConfirm(String email, String otp) {}
-
-    @PostMapping("/profile/email/request")
-    public ApiResponse<Void> requestEmailChange(@AuthenticationPrincipal UserContext ctx,
-                                                @RequestBody EmailChangeRequest req) {
-        passwordResetService.sendEmailChangeOtp(ctx.id(), req.email());
-        return ApiResponse.ok("Da gui OTP toi email moi");
-    }
-
-    @PostMapping("/profile/email/confirm")
-    public ApiResponse<AuthResponse> confirmEmailChange(@AuthenticationPrincipal UserContext ctx,
-                                                        @RequestBody EmailChangeConfirm req) {
-        passwordResetService.confirmEmailChange(ctx.id(), req.email(), req.otp());
-        UserEntity user = userRepository.findById(ctx.id())
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "User khong ton tai"));
-        return ApiResponse.ok("Doi email thanh cong", AuthResponse.from(user));
-    }
 }

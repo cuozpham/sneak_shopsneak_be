@@ -27,41 +27,6 @@ public class PasswordResetService {
     private final Map<String, Instant> verifiedRegisterEmailStore = new ConcurrentHashMap<>();
     private final Map<String, OtpEntry> emailVerifyOtpStore = new ConcurrentHashMap<>();
 
-    private record EmailChangeEntry(String newEmail, String otp, Instant expiresAt) {}
-    private final Map<Integer, EmailChangeEntry> emailChangeOtpStore = new ConcurrentHashMap<>();
-
-    public void sendEmailChangeOtp(Integer userId, String newEmail) {
-        if (newEmail == null || newEmail.isBlank()) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Email mới không được để trống");
-        }
-        String email = newEmail.trim().toLowerCase();
-        if (!email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Email không hợp lệ");
-        }
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Tài khoản không tồn tại"));
-        if (email.equalsIgnoreCase(user.getEmail())) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Email mới trùng với email hiện tại");
-        }
-        if (userRepository.existsByEmailAndIdNot(email, userId)) {
-            throw new AppException(ErrorCode.CONFLICT, "Email đã được sử dụng bởi tài khoản khác");
-        }
-        String otp = String.format("%06d", (int)(Math.random() * 1_000_000));
-        emailChangeOtpStore.put(userId, new EmailChangeEntry(email, otp, Instant.now().plusSeconds(300)));
-
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setFrom(fromEmail);
-        msg.setTo(email);
-        msg.setSubject("[MANDRO] Mã xác nhận đổi email");
-        msg.setText("Xin chào " + user.getFullName() + ",\n\n"
-                + "Bạn vừa yêu cầu đổi email đăng nhập MANDRO sang địa chỉ này.\n"
-                + "Mã OTP xác nhận của bạn là:\n\n"
-                + "    " + otp + "\n\n"
-                + "Mã có hiệu lực trong 5 phút. Nếu không phải bạn, vui lòng bỏ qua email này.\n\n"
-                + "MANDRO");
-        sendMailAsync(msg);
-    }
-
     private void sendMailAsync(SimpleMailMessage msg) {
         java.util.concurrent.CompletableFuture.runAsync(() -> {
             try {
@@ -71,29 +36,6 @@ public class PasswordResetService {
                         .warn("Failed to send mail to {}: {}", msg.getTo(), ex.getMessage());
             }
         });
-    }
-
-    public String confirmEmailChange(Integer userId, String newEmail, String otp) {
-        EmailChangeEntry entry = emailChangeOtpStore.get(userId);
-        if (entry == null || Instant.now().isAfter(entry.expiresAt())) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Mã OTP đã hết hạn, vui lòng gửi lại");
-        }
-        if (!entry.newEmail().equalsIgnoreCase(newEmail.trim())) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Email không khớp với yêu cầu");
-        }
-        if (!entry.otp().equals(otp)) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Mã OTP không đúng");
-        }
-        emailChangeOtpStore.remove(userId);
-        UserEntity user = userRepository.findById(userId)
-                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Tài khoản không tồn tại"));
-        if (userRepository.existsByEmailAndIdNot(entry.newEmail(), userId)) {
-            throw new AppException(ErrorCode.CONFLICT, "Email đã được sử dụng bởi tài khoản khác");
-        }
-        user.setEmail(entry.newEmail());
-        user.setEmailVerified(true);
-        userRepository.save(user);
-        return entry.newEmail();
     }
 
     private final UserRepository userRepository;
