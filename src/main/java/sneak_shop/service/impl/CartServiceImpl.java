@@ -104,7 +104,7 @@ public class CartServiceImpl implements CartService {
         if (item.getColor() != null) {
             int stock = item.getColor().getStockQuantity();
             if (quantity > stock)
-                throw new AppException(ErrorCode.INVALID_REQUEST, "Chi con " + stock + " san pham");
+                throw new AppException(ErrorCode.INVALID_REQUEST, "Chỉ còn " + stock + " sản phẩm trong kho");
         }
         item.setQuantity(quantity);
         return CartItemResponse.from(cartItemRepository.save(item));
