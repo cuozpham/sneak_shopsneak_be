@@ -22,7 +22,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT DISTINCT p.* FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status != 'inactive'
+              AND p.status = 'active'
+              AND COALESCE(p.stock_quantity, 0) > 0
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
@@ -42,7 +43,8 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
             SELECT COUNT(DISTINCT p.id) FROM products p
             LEFT JOIN product_category_mappings m ON m.product_id = p.id
             WHERE p.is_deleted = false
-              AND p.status != 'inactive'
+              AND p.status = 'active'
+              AND COALESCE(p.stock_quantity, 0) > 0
               AND (:minPrice IS NULL OR p.price >= :minPrice)
               AND (:maxPrice IS NULL OR p.price <= :maxPrice)
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
