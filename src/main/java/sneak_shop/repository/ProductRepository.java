@@ -223,30 +223,35 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND p.status = 'active'
               AND p.is_featured = 1
               AND p.price > 0
-            ORDER BY COALESCE(p.featured_order, 999999) ASC, p.id DESC
+            ORDER BY COALESCE(p.featured_order, 999999) ASC, p.created_at DESC, p.id DESC
             """,
             nativeQuery = true)
     List<ProductEntity> findPinnedFeatured();
 
     long countByFeaturedTrue();
 
+    @Modifying
+    @Query(value = """
+            UPDATE products
+            SET featured_order = featured_order + 1
+            WHERE is_featured = 1
+              AND is_deleted = false
+              AND featured_order IS NOT NULL
+              AND featured_order >= :fromOrder
+              AND (:shopId IS NULL OR shop_id = :shopId)
+              AND id <> :excludeId
+            """,
+            nativeQuery = true)
+    int shiftFeaturedOrderDown(@Param("fromOrder") Integer fromOrder,
+                               @Param("shopId") Integer shopId,
+                               @Param("excludeId") Integer excludeId);
+
     @Query(value = """
             SELECT p.* FROM products p
             WHERE p.is_deleted = false
               AND p.status = 'active'
               AND p.price > 0
-              AND (:excludedIds IS NULL OR p.id NOT IN (:excludedIds))
-              AND (
-                  :minReviews = 0
-                  OR COALESCE(p.review_count, 0) >= :minReviews
-                  OR (
-                      SELECT COALESCE(SUM(oi.quantity), 0)
-                      FROM order_items oi
-                      JOIN orders o ON o.id = oi.order_id
-                      WHERE oi.product_id = p.id
-                        AND o.created_at >= :since
-                  ) > 0
-              )
+              AND p.id NOT IN (:excludedIds)
             ORDER BY (
                 SELECT COALESCE(SUM(oi.quantity), 0)
                 FROM order_items oi
@@ -254,8 +259,11 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
                 WHERE oi.product_id = p.id
                   AND o.created_at >= :since
             ) DESC,
-            COALESCE(p.rating_average, 0) DESC,
-            p.created_at DESC
+            CASE WHEN COALESCE(p.review_count, 0) >= :minReviews
+                 THEN COALESCE(p.rating_average, 0)
+                 ELSE 0 END DESC,
+            p.created_at DESC,
+            p.id DESC
             LIMIT :limit
             """,
             nativeQuery = true)

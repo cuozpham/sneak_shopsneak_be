@@ -307,6 +307,10 @@ public class ProductServiceImpl implements ProductService {
                         "Chi duoc ghim toi da " + featuredConfig.getMaxPinned() + " san pham");
             }
         }
+        Integer shopId = product.getShop() != null ? product.getShop().getId() : null;
+        if (featured && featuredOrder != null) {
+            productRepository.shiftFeaturedOrderDown(featuredOrder, shopId, productId);
+        }
         product.setFeatured(featured);
         product.setFeaturedOrder(featured ? featuredOrder : null);
         product.setUpdatedBy(currentUser());
