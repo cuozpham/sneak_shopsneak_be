@@ -221,6 +221,53 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Transactional
+    public ReviewResponse shopReplyByAdmin(sneak_shop.security.UserContext ctx, Integer reviewId, String content) {
+        if (content == null || content.trim().isEmpty()) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Noi dung phan hoi khong duoc de trong");
+        }
+        String trimmed = content.trim();
+        if (trimmed.length() > 1000) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Phan hoi toi da 1000 ky tu");
+        }
+        ReviewEntity review = authorizeShopAdmin(ctx, reviewId);
+        review.setShopReply(trimmed);
+        review.setShopReplyAt(Instant.now());
+        review = reviewRepository.save(review);
+        notificationService.notifyUser(
+                review.getUser().getId(),
+                review.getOrderItem() != null ? review.getOrderItem().getOrder() : null,
+                "Shop đã phản hồi",
+                "Shop vừa phản hồi đánh giá của bạn cho sản phẩm " + review.getProduct().getName() + ".",
+                "review_reply",
+                null
+        );
+        return ReviewResponse.from(review);
+    }
+
+    @Transactional
+    public ReviewResponse deleteShopReplyByAdmin(sneak_shop.security.UserContext ctx, Integer reviewId) {
+        ReviewEntity review = authorizeShopAdmin(ctx, reviewId);
+        review.setShopReply(null);
+        review.setShopReplyAt(null);
+        review = reviewRepository.save(review);
+        return ReviewResponse.from(review);
+    }
+
+    private ReviewEntity authorizeShopAdmin(sneak_shop.security.UserContext ctx, Integer reviewId) {
+        if (ctx == null || !ctx.isAdmin()) {
+            throw new AppException(ErrorCode.ACCESS_DENIED, "Ban khong co quyen");
+        }
+        ReviewEntity review = reviewRepository.findByIdAndProductDeletedFalse(reviewId)
+                .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Review khong ton tai"));
+        Integer reviewShopId = review.getShop() != null ? review.getShop().getId() : null;
+        Integer adminShopId = ctx.shopId();
+        if (reviewShopId == null || adminShopId == null || !reviewShopId.equals(adminShopId)) {
+            throw new AppException(ErrorCode.ACCESS_DENIED, "Ban khong phai admin cua shop nay");
+        }
+        return review;
+    }
+
+    @Transactional
     public ProductImageEntity saveReviewImage(Integer productId, String imageUrl) {
         ProductEntity product = productRepository.findById(productId)
                 .filter(p -> !p.isDeleted())

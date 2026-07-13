@@ -63,6 +63,23 @@ public class ReviewController {
         return ApiResponse.ok("Da tra loi", reviewService.customerReply(ctx.id(), reviewId, reply));
     }
 
+    public record ShopReplyBody(@NotBlank String content) {}
+
+    @PutMapping("/{reviewId}/shop-reply")
+    public ApiResponse<ReviewResponse> shopReply(
+            @AuthenticationPrincipal UserContext ctx,
+            @PathVariable Integer reviewId,
+            @Valid @RequestBody ShopReplyBody req) {
+        return ApiResponse.ok("Da phan hoi danh gia", reviewService.shopReplyByAdmin(ctx, reviewId, req.content()));
+    }
+
+    @DeleteMapping("/{reviewId}/shop-reply")
+    public ApiResponse<ReviewResponse> deleteShopReply(
+            @AuthenticationPrincipal UserContext ctx,
+            @PathVariable Integer reviewId) {
+        return ApiResponse.ok("Da xoa phan hoi", reviewService.deleteShopReplyByAdmin(ctx, reviewId));
+    }
+
     record UploadImageRequest(@NotNull Integer productId, @NotBlank String imageUrl) {}
     record UploadImageResponse(Integer productImageId, String imageUrl) {}
 

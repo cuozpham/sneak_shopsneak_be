@@ -12,6 +12,7 @@ public record UserContext(
         String email,
         String fullName,
         String role,
+        Integer shopId,
         Collection<? extends GrantedAuthority> authorities
 ) {
     public static UserContext from(UserEntity user) {
@@ -21,6 +22,7 @@ public record UserContext(
                 user.getEmail(),
                 user.getFullName(),
                 user.getRole().name(),
+                user.getShop() != null ? user.getShop().getId() : null,
                 List.of(new SimpleGrantedAuthority(roleName))
         );
     }

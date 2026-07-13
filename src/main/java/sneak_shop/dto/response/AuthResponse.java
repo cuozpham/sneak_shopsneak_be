@@ -18,6 +18,7 @@ public record AuthResponse(
         String gender,
         LocalDate birthDate,
         Instant createdAt,
+        Integer shopId,
         String tokenType,
         String accessToken
 ) {
@@ -34,6 +35,7 @@ public record AuthResponse(
                 user.getGender() != null ? user.getGender().name() : null,
                 user.getBirthDate(),
                 user.getCreatedAt(),
+                user.getShop() != null ? user.getShop().getId() : null,
                 token != null ? "Bearer" : null,
                 token
         );
