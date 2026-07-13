@@ -129,11 +129,14 @@ public class SecurityConfig {
 
     @Bean
     @Profile("!prod")
-    public CommandLineRunner seedDefaultUsers(UserRepository userRepository, PasswordEncoder encoder) {
+    public CommandLineRunner seedDefaultUsers(UserRepository userRepository, PasswordEncoder encoder,
+                                              sneak_shop.repository.ProductShopRepository shopRepository) {
         return args -> {
             try {
-                seedUser(userRepository, encoder, PRIMARY_ADMIN_EMAIL, "Cuong", "123456", "0900000001", UserRole.admin);
-                seedUser(userRepository, encoder, "user@sneakshop.vn", "User", "123456", "0900000002", UserRole.user);
+                sneak_shop.entity.ProductShopEntity defaultShop = shopRepository.findByNameIgnoreCase("sneak")
+                        .orElseGet(() -> shopRepository.save(sneak_shop.entity.ProductShopEntity.builder().name("sneak").build()));
+                seedUser(userRepository, encoder, PRIMARY_ADMIN_EMAIL, "Cuong", "123456", "0900000001", UserRole.admin, defaultShop);
+                seedUser(userRepository, encoder, "user@sneakshop.vn", "User", "123456", "0900000002", UserRole.user, null);
             } catch (Exception ex) {
                 log.warn("Skipping default user seed during startup: {}", ex.getMessage(), ex);
             }
@@ -141,7 +144,8 @@ public class SecurityConfig {
     }
 
     private void seedUser(UserRepository repo, PasswordEncoder enc,
-                          String email, String fullName, String rawPwd, String phone, UserRole role) {
+                          String email, String fullName, String rawPwd, String phone, UserRole role,
+                          sneak_shop.entity.ProductShopEntity shop) {
         String resolvedPhone = (phone == null || phone.isBlank()) ? "0900000001" : phone;
         repo.findByEmail(email).ifPresentOrElse(
                 existing -> {
@@ -151,6 +155,9 @@ public class SecurityConfig {
                     if (existing.getPhone() == null || existing.getPhone().isBlank()) {
                         existing.setPhone(resolvedPhone);
                     }
+                    if (shop != null && existing.getShop() == null) {
+                        existing.setShop(shop);
+                    }
                     repo.save(existing);
                 },
                 () -> repo.save(UserEntity.builder()
@@ -159,6 +166,7 @@ public class SecurityConfig {
                         .password(enc.encode(rawPwd))
                         .phone(resolvedPhone)
                         .role(role)
+                        .shop(shop)
                         .build())
         );
     }
