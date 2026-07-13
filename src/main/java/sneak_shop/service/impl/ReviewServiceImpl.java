@@ -226,8 +226,8 @@ public class ReviewServiceImpl implements ReviewService {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Noi dung phan hoi khong duoc de trong");
         }
         String trimmed = content.trim();
-        if (trimmed.length() > 1000) {
-            throw new AppException(ErrorCode.INVALID_REQUEST, "Phan hoi toi da 1000 ky tu");
+        if (trimmed.length() > 5000) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Phan hoi qua dai");
         }
         ReviewEntity review = authorizeShopAdmin(ctx, reviewId);
         review.setShopReply(trimmed);
