@@ -56,12 +56,12 @@ public class PasswordResetService {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setFrom(fromEmail);
         msg.setTo(email);
-        msg.setSubject("[SNEAK SHOP] Mã xác nhận đăng ký tài khoản");
+        msg.setSubject("[MANDRO] Mã xác nhận đăng ký tài khoản");
         msg.setText("Xin chào,\n\n"
-                + "Mã OTP xác nhận đăng ký tài khoản Sneak Shop của bạn là:\n\n"
+                + "Mã OTP xác nhận đăng ký tài khoản MANDRO của bạn là:\n\n"
                 + "    " + otp + "\n\n"
                 + "Mã có hiệu lực trong 5 phút. Không chia sẻ mã này với ai.\n\n"
-                + "SNEAK SHOP");
+                + "MANDRO");
         mailSender.send(msg);
     }
 
@@ -94,12 +94,12 @@ public class PasswordResetService {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setFrom(fromEmail);
         msg.setTo(email);
-        msg.setSubject("[SNEAK SHOP] Mã xác thực email");
+        msg.setSubject("[MANDRO] Mã xác thực email");
         msg.setText("Xin chào " + user.getFullName() + ",\n\n"
                 + "Mã OTP để xác thực email của bạn là:\n\n"
                 + "    " + otp + "\n\n"
                 + "Mã có hiệu lực trong 5 phút. Không chia sẻ mã này với ai.\n\n"
-                + "SNEAK SHOP");
+                + "MANDRO");
         mailSender.send(msg);
     }
 
@@ -136,12 +136,12 @@ public class PasswordResetService {
         SimpleMailMessage msg = new SimpleMailMessage();
         msg.setFrom(fromEmail);
         msg.setTo(email);
-        msg.setSubject("[SNEAK SHOP] Mã xác nhận đặt lại mật khẩu");
+        msg.setSubject("[MANDRO] Mã xác nhận đặt lại mật khẩu");
         msg.setText("Xin chào " + user.getFullName() + ",\n\n"
                 + "Mã OTP để đặt lại mật khẩu của bạn là:\n\n"
                 + "    " + otp + "\n\n"
                 + "Mã có hiệu lực trong 5 phút. Không chia sẻ mã này với ai.\n\n"
-                + "SNEAK SHOP");
+                + "MANDRO");
         mailSender.send(msg);
     }
 

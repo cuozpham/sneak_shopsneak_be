@@ -829,8 +829,8 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private ProductShopEntity resolveDefaultShop() {
-        return shopRepository.findByNameIgnoreCase("sneak")
-                .orElseGet(() -> shopRepository.save(ProductShopEntity.builder().name("sneak").build()));
+        return shopRepository.findByNameIgnoreCase("MANDRO")
+                .orElseGet(() -> shopRepository.save(ProductShopEntity.builder().name("MANDRO").build()));
     }
 
     private String currentUser() {

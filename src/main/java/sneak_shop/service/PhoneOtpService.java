@@ -96,7 +96,7 @@ public class PhoneOtpService {
         body.put("phone", phone);
         body.put("template_id", zaloTemplateId);
         body.put("template_data", Map.of("otp", otp));
-        body.put("tracking_id", "SNEAKSHOP-OTP-" + phone);
+        body.put("tracking_id", "MANDRO-OTP-" + phone);
 
         try {
             Map<?, ?> resp = restClient.post()

@@ -12,7 +12,7 @@ import sneak_shop.repository.ProductShopRepository;
 @Slf4j
 public class DefaultShopInitializer {
 
-    private static final String DEFAULT_SHOP_NAME = "sneak";
+    private static final String DEFAULT_SHOP_NAME = "MANDRO";
 
     @Bean
     @Profile("!prod")

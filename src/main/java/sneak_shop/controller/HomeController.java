@@ -8,6 +8,6 @@ public class HomeController {
 
     @GetMapping("/")
     public String home() {
-        return "Sneak Shop API Running";
+        return "MANDRO API Running";
     }
 }

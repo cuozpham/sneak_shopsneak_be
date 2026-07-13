@@ -133,8 +133,8 @@ public class SecurityConfig {
                                               sneak_shop.repository.ProductShopRepository shopRepository) {
         return args -> {
             try {
-                sneak_shop.entity.ProductShopEntity defaultShop = shopRepository.findByNameIgnoreCase("sneak")
-                        .orElseGet(() -> shopRepository.save(sneak_shop.entity.ProductShopEntity.builder().name("sneak").build()));
+                sneak_shop.entity.ProductShopEntity defaultShop = shopRepository.findByNameIgnoreCase("MANDRO")
+                        .orElseGet(() -> shopRepository.save(sneak_shop.entity.ProductShopEntity.builder().name("MANDRO").build()));
                 seedUser(userRepository, encoder, PRIMARY_ADMIN_EMAIL, "Cuong", "123456", "0900000001", UserRole.admin, defaultShop);
                 seedUser(userRepository, encoder, "user@sneakshop.vn", "User", "123456", "0900000002", UserRole.user, null);
             } catch (Exception ex) {

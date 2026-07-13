@@ -123,7 +123,7 @@ public class AdminChatController {
         }
         UserEntity admin = userRepository.findById(ctx.id()).orElse(null);
         String adminName = (admin != null && admin.getFullName() != null && !admin.getFullName().isBlank())
-                ? admin.getFullName() : "Sneak Shop";
+                ? admin.getFullName() : "MANDRO";
         String adminAvatarUrl = admin != null ? admin.getAvatarUrl() : null;
         ChatMessageEntity msg = ChatMessageEntity.builder()
                 .orderCode(orderCode)
