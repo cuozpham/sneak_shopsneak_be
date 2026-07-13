@@ -115,10 +115,15 @@ public class UserProfileController {
     }
 
     private LocalDate parseBirthDate(String value) {
+        LocalDate parsed;
         try {
-            return LocalDate.parse(value);
+            parsed = LocalDate.parse(value);
         } catch (Exception ex) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Ngay sinh khong hop le");
         }
+        if (parsed.isAfter(LocalDate.now())) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Ngay sinh khong duoc vuot qua ngay hien tai");
+        }
+        return parsed;
     }
 }
