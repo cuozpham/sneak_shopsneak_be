@@ -28,7 +28,15 @@ public interface ProductRepository extends JpaRepository<ProductEntity, Integer>
               AND (:keyword IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')))
               AND (:hasCategory = 0 OR m.category_id IN :categoryIds)
               AND (:minRating IS NULL OR COALESCE(p.rating_average, 0) >= :minRating)
-            ORDER BY p.created_at DESC, p.id DESC
+            ORDER BY
+              p.is_featured DESC,
+              COALESCE(p.featured_order, 2147483647) ASC,
+              CASE WHEN COALESCE(p.review_count, 0) >= 3
+                   THEN COALESCE(p.rating_average, 0)
+                   ELSE 0 END DESC,
+              (SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi WHERE oi.product_id = p.id) DESC,
+              p.created_at DESC,
+              p.id ASC
             """,
             countQuery = """
             SELECT COUNT(DISTINCT p.id) FROM products p
