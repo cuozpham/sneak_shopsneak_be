@@ -10,6 +10,8 @@ import java.util.Optional;
 public interface ProductCategoryRepository extends JpaRepository<ProductCategoryEntity, Integer> {
     Optional<ProductCategoryEntity> findBySlug(String slug);
     boolean existsBySlug(String slug);
+    Optional<ProductCategoryEntity> findBySlugAndParentIsNull(String slug);
+    Optional<ProductCategoryEntity> findBySlugAndParentId(String slug, Integer parentId);
     List<ProductCategoryEntity> findByParentIsNullAndStatus(CategoryStatus status);
     List<ProductCategoryEntity> findByParentIdAndStatus(Integer parentId, CategoryStatus status);
     List<ProductCategoryEntity> findByStatusOrderBySortOrderAsc(CategoryStatus status);

@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Transactional
 @Service
@@ -66,14 +67,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     public CategoryResponse create(CategoryRequest req) {
-        categoryRepository.findBySlug(req.slug()).ifPresent(existing -> {
-            if (existing.isDeleted()) {
-                throw new AppException(ErrorCode.CONFLICT,
-                        "Danh mục \"" + existing.getName() + "\" đang trong thùng rác. Vui lòng khôi phục thay vì tạo mới.");
-            }
-            throw new AppException(ErrorCode.CONFLICT, "Đã có danh mục trùng tên này, vui lòng lấy tên danh mục khác");
-        });
         ProductCategoryEntity parent = resolveParent(req.parentId(), null);
+        checkCategoryConflict(req.slug(), parent, null);
 
         ProductCategoryEntity entity = ProductCategoryEntity.builder()
                 .name(req.name()).slug(req.slug()).description(req.description())
@@ -90,17 +85,8 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai"));
         Integer oldParentId = parentKey(entity);
 
-        if (!entity.getSlug().equals(req.slug())) {
-            categoryRepository.findBySlug(req.slug()).ifPresent(existing -> {
-                if (existing.isDeleted()) {
-                    throw new AppException(ErrorCode.CONFLICT,
-                            "Danh mục \"" + existing.getName() + "\" đang trong thùng rác. Vui lòng khôi phục thay vì tạo mới.");
-                }
-                throw new AppException(ErrorCode.CONFLICT, "Đã có danh mục trùng tên này, vui lòng lấy tên danh mục khác");
-            });
-        }
-
         ProductCategoryEntity parent = resolveParent(req.parentId(), id);
+        checkCategoryConflict(req.slug(), parent, id);
 
         entity.setName(req.name());
         entity.setSlug(req.slug());
@@ -187,6 +173,49 @@ public class CategoryServiceImpl implements CategoryService {
                 target.add(category.getId());
                 collectDescendants(category.getId(), all, target);
             }
+        }
+    }
+
+    private void checkCategoryConflict(String slug, ProductCategoryEntity parent, Integer selfId) {
+        Optional<ProductCategoryEntity> existingOpt;
+
+        if (parent == null) {
+            // Case 1: thêm danh mục chính (root) — check trong tất cả roots (bao gồm trash)
+            existingOpt = categoryRepository.findBySlugAndParentIsNull(slug);
+            existingOpt.filter(e -> !e.getId().equals(selfId)).ifPresent(existing -> {
+                if (existing.isDeleted()) {
+                    throw new AppException(ErrorCode.CONFLICT,
+                            "Danh mục chính \"" + existing.getName() + "\" đang trong thùng rác. Vui lòng khôi phục thay vì tạo mới.");
+                }
+                throw new AppException(ErrorCode.CONFLICT,
+                        "Danh mục chính \"" + existing.getName() + "\" đã tồn tại");
+            });
+        } else if (parent.getParent() == null) {
+            // Case 2: thêm danh mục cha (level-2) dưới danh mục chính — check trong siblings của root này
+            existingOpt = categoryRepository.findBySlugAndParentId(slug, parent.getId());
+            existingOpt.filter(e -> !e.getId().equals(selfId)).ifPresent(existing -> {
+                if (existing.isDeleted()) {
+                    throw new AppException(ErrorCode.CONFLICT,
+                            "Danh mục cha \"" + existing.getName() + "\" đang trong thùng rác dưới \""
+                                    + parent.getName() + "\". Vui lòng khôi phục thay vì tạo mới.");
+                }
+                throw new AppException(ErrorCode.CONFLICT,
+                        "Danh mục cha \"" + existing.getName() + "\" đã tồn tại dưới danh mục chính \""
+                                + parent.getName() + "\"");
+            });
+        } else {
+            // Case 3: thêm danh mục con (level-3) dưới danh mục cha — check trong siblings của parent này
+            existingOpt = categoryRepository.findBySlugAndParentId(slug, parent.getId());
+            existingOpt.filter(e -> !e.getId().equals(selfId)).ifPresent(existing -> {
+                if (existing.isDeleted()) {
+                    throw new AppException(ErrorCode.CONFLICT,
+                            "Danh mục con \"" + existing.getName() + "\" đang trong thùng rác dưới \""
+                                    + parent.getName() + "\". Vui lòng khôi phục thay vì tạo mới.");
+                }
+                throw new AppException(ErrorCode.CONFLICT,
+                        "Danh mục con \"" + existing.getName() + "\" đã tồn tại dưới danh mục cha \""
+                                + parent.getName() + "\"");
+            });
         }
     }
 
