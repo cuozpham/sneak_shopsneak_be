@@ -176,52 +176,65 @@ public class CategoryServiceImpl implements CategoryService {
         }
     }
 
-    private void checkCategoryConflict(String slug, ProductCategoryEntity parent, Integer selfId) {
-        // if 1: thêm danh mục chính (root) — 1 tham số slug
-        if (parent == null) {
-            categoryRepository.findMainCategoryBySlug(slug)
-                    .filter(e -> !e.getId().equals(selfId))
-                    .ifPresent(existing -> {
-                        if (existing.isDeleted()) {
-                            throw new AppException(ErrorCode.CONFLICT,
-                                    "Danh mục chính \"" + existing.getName() + "\" đang trong thùng rác. Vui lòng khôi phục thay vì tạo mới.");
-                        }
-                        throw new AppException(ErrorCode.CONFLICT,
-                                "Danh mục chính \"" + existing.getName() + "\" đã tồn tại");
-                    });
+    private void checkCategoryConflict(String slugMoi, ProductCategoryEntity danhMucCha, Integer idHienTai) {
+        if (danhMucCha == null) {
+            // if 1: 1 tham số — chỉ có slug danh mục chính
+            checkTrungDanhMucChinh(slugMoi, idHienTai);
+        } else if (danhMucCha.getParent() == null) {
+            // if 2: 2 tham số — danhMucChinh + slug danh mục cha
+            checkTrungDanhMucCha(danhMucCha, slugMoi, idHienTai);
+        } else {
+            // if 3: 3 tham số — danhMucChinh + danhMucCha + slug danh mục con
+            ProductCategoryEntity danhMucChinh = danhMucCha.getParent();
+            checkTrungDanhMucCon(danhMucChinh, danhMucCha, slugMoi, idHienTai);
         }
-        // if 2: thêm danh mục cha (level-2) — 2 tham số: mainId + slug
-        else if (parent.getParent() == null) {
-            Integer mainId = parent.getId();
-            categoryRepository.findParentCategoryUnderMain(mainId, slug)
-                    .filter(e -> !e.getId().equals(selfId))
-                    .ifPresent(existing -> {
-                        if (existing.isDeleted()) {
-                            throw new AppException(ErrorCode.CONFLICT,
-                                    "Danh mục cha \"" + existing.getName() + "\" đang trong thùng rác dưới \""
-                                            + parent.getName() + "\". Vui lòng khôi phục thay vì tạo mới.");
-                        }
+    }
+
+    // if 1: so sánh trong tất cả danh mục chính
+    private void checkTrungDanhMucChinh(String slugMoi, Integer idHienTai) {
+        categoryRepository.findMainCategoryBySlug(slugMoi)
+                .filter(e -> !e.getId().equals(idHienTai))
+                .ifPresent(dangTonTai -> {
+                    if (dangTonTai.isDeleted()) {
                         throw new AppException(ErrorCode.CONFLICT,
-                                "Danh mục cha \"" + existing.getName() + "\" đã tồn tại dưới danh mục chính \""
-                                        + parent.getName() + "\"");
-                    });
-        }
-        // if 3: thêm danh mục con (level-3) — 3 tham số: mainId + parentId + slug
-        else {
-            Integer parentId = parent.getId();
-            categoryRepository.findChildCategoryUnderParent(parentId, slug)
-                    .filter(e -> !e.getId().equals(selfId))
-                    .ifPresent(existing -> {
-                        if (existing.isDeleted()) {
-                            throw new AppException(ErrorCode.CONFLICT,
-                                    "Danh mục con \"" + existing.getName() + "\" đang trong thùng rác dưới \""
-                                            + parent.getName() + "\". Vui lòng khôi phục thay vì tạo mới.");
-                        }
+                                "Danh mục chính \"" + dangTonTai.getName() + "\" đang trong thùng rác. Vui lòng khôi phục thay vì tạo mới.");
+                    }
+                    throw new AppException(ErrorCode.CONFLICT,
+                            "Danh mục chính \"" + dangTonTai.getName() + "\" đã tồn tại");
+                });
+    }
+
+    // if 2: so sánh trong các danh mục cha thuộc danh mục chính này
+    private void checkTrungDanhMucCha(ProductCategoryEntity danhMucChinh, String slugMoi, Integer idHienTai) {
+        categoryRepository.findParentCategoryUnderMain(danhMucChinh.getId(), slugMoi)
+                .filter(e -> !e.getId().equals(idHienTai))
+                .ifPresent(dangTonTai -> {
+                    if (dangTonTai.isDeleted()) {
                         throw new AppException(ErrorCode.CONFLICT,
-                                "Danh mục con \"" + existing.getName() + "\" đã tồn tại dưới danh mục cha \""
-                                        + parent.getName() + "\"");
-                    });
-        }
+                                "Danh mục cha \"" + dangTonTai.getName() + "\" đang trong thùng rác dưới \""
+                                        + danhMucChinh.getName() + "\". Vui lòng khôi phục thay vì tạo mới.");
+                    }
+                    throw new AppException(ErrorCode.CONFLICT,
+                            "Danh mục cha \"" + dangTonTai.getName() + "\" đã tồn tại dưới danh mục chính \""
+                                    + danhMucChinh.getName() + "\"");
+                });
+    }
+
+    // if 3: so sánh trong các danh mục con thuộc danh mục cha này (nằm dưới danh mục chính)
+    private void checkTrungDanhMucCon(ProductCategoryEntity danhMucChinh, ProductCategoryEntity danhMucCha,
+                                       String slugMoi, Integer idHienTai) {
+        categoryRepository.findChildCategoryUnderParent(danhMucCha.getId(), slugMoi)
+                .filter(e -> !e.getId().equals(idHienTai))
+                .ifPresent(dangTonTai -> {
+                    if (dangTonTai.isDeleted()) {
+                        throw new AppException(ErrorCode.CONFLICT,
+                                "Danh mục con \"" + dangTonTai.getName() + "\" đang trong thùng rác dưới \""
+                                        + danhMucChinh.getName() + " > " + danhMucCha.getName() + "\". Vui lòng khôi phục thay vì tạo mới.");
+                    }
+                    throw new AppException(ErrorCode.CONFLICT,
+                            "Danh mục con \"" + dangTonTai.getName() + "\" đã tồn tại dưới danh mục cha \""
+                                    + danhMucChinh.getName() + " > " + danhMucCha.getName() + "\"");
+                });
     }
 
     private ProductCategoryEntity resolveParent(Integer parentId, Integer selfId) {
