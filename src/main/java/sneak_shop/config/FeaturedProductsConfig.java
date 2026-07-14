@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "app.featured")
 public class FeaturedProductsConfig {
     private int totalDisplayed = 12;
-    private int maxPinned = 6;
+    private int maxPinned = 12;
     private int maxPerCategory = 3;
     private int recentSalesWindowDays = 30;
     private int minReviewsForRating = 3;

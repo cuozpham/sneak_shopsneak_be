@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Transactional
 @Service
@@ -66,14 +67,17 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     public CategoryResponse create(CategoryRequest req) {
-        categoryRepository.findBySlug(req.slug()).ifPresent(existing -> {
+        ProductCategoryEntity parent = resolveParent(req.parentId(), null);
+        Optional<ProductCategoryEntity> conflict = parent == null
+                ? categoryRepository.findBySlugAndParentIsNull(req.slug())
+                : categoryRepository.findBySlugAndParentId(req.slug(), parent.getId());
+        conflict.ifPresent(existing -> {
             if (existing.isDeleted()) {
                 throw new AppException(ErrorCode.CONFLICT,
                         "Danh mục \"" + existing.getName() + "\" đang trong thùng rác. Vui lòng khôi phục thay vì tạo mới.");
             }
-            throw new AppException(ErrorCode.CONFLICT, "Đã có danh mục trùng tên này, vui lòng lấy tên danh mục khác");
+            throw new AppException(ErrorCode.CONFLICT, "Đã có danh mục trùng tên cùng cấp, vui lòng đặt tên khác");
         });
-        ProductCategoryEntity parent = resolveParent(req.parentId(), null);
 
         ProductCategoryEntity entity = ProductCategoryEntity.builder()
                 .name(req.name()).slug(req.slug()).description(req.description())
@@ -90,17 +94,19 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Danh muc khong ton tai"));
         Integer oldParentId = parentKey(entity);
 
-        if (!entity.getSlug().equals(req.slug())) {
-            categoryRepository.findBySlug(req.slug()).ifPresent(existing -> {
-                if (existing.isDeleted()) {
-                    throw new AppException(ErrorCode.CONFLICT,
-                            "Danh mục \"" + existing.getName() + "\" đang trong thùng rác. Vui lòng khôi phục thay vì tạo mới.");
-                }
-                throw new AppException(ErrorCode.CONFLICT, "Đã có danh mục trùng tên này, vui lòng lấy tên danh mục khác");
-            });
-        }
-
         ProductCategoryEntity parent = resolveParent(req.parentId(), id);
+        Integer parentIdCandidate = parent != null ? parent.getId() : null;
+        Optional<ProductCategoryEntity> conflict = parentIdCandidate == null
+                ? categoryRepository.findBySlugAndParentIsNull(req.slug())
+                : categoryRepository.findBySlugAndParentId(req.slug(), parentIdCandidate);
+        conflict.ifPresent(existing -> {
+            if (existing.getId().equals(id)) return;
+            if (existing.isDeleted()) {
+                throw new AppException(ErrorCode.CONFLICT,
+                        "Danh mục \"" + existing.getName() + "\" đang trong thùng rác. Vui lòng khôi phục thay vì tạo mới.");
+            }
+            throw new AppException(ErrorCode.CONFLICT, "Đã có danh mục trùng tên cùng cấp, vui lòng đặt tên khác");
+        });
 
         entity.setName(req.name());
         entity.setSlug(req.slug());
