@@ -63,13 +63,14 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Transactional
-    public void notifyUser(Integer userId, OrderEntity order, String title, String body, String type, String imageUrl) {
+    public void notifyUser(Integer userId, OrderEntity order, sneak_shop.entity.ProductEntity product, String title, String body, String type, String imageUrl) {
         UserEntity user = userRepository.findById(userId)
                 .orElseThrow(() -> new AppException(ErrorCode.RESOURCE_NOT_FOUND, "Nguoi dung khong ton tai"));
         String orderCode = order != null ? order.getOrderCode() : null;
         NotificationEntity saved = notificationRepository.save(NotificationEntity.builder()
                 .user(user)
                 .order(order)
+                .product(product)
                 .title(title)
                 .body(body)
                 .type(type != null ? type : "system")

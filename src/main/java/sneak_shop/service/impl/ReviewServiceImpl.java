@@ -212,6 +212,7 @@ public class ReviewServiceImpl implements ReviewService {
         notificationService.notifyUser(
                 review.getUser().getId(),
                 review.getOrderItem() != null ? review.getOrderItem().getOrder() : null,
+                review.getProduct(),
                 "Shop đã phản hồi",
                 "Shop vừa phản hồi đánh giá của bạn cho sản phẩm " + review.getProduct().getName() + ".",
                 "review_reply",
@@ -236,6 +237,7 @@ public class ReviewServiceImpl implements ReviewService {
         notificationService.notifyUser(
                 review.getUser().getId(),
                 review.getOrderItem() != null ? review.getOrderItem().getOrder() : null,
+                review.getProduct(),
                 "Shop đã phản hồi",
                 "Shop vừa phản hồi đánh giá của bạn cho sản phẩm " + review.getProduct().getName() + ".",
                 "review_reply",

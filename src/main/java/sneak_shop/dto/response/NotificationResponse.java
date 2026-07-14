@@ -11,6 +11,8 @@ public record NotificationResponse(
         String imageUrl,
         String type,
         String orderCode,
+        Integer productId,
+        String productSlug,
         boolean isRead,
         Instant createdAt
 ) {
@@ -19,9 +21,12 @@ public record NotificationResponse(
     }
 
     public static NotificationResponse from(NotificationEntity e, String orderCode) {
+        Integer productId = e.getProduct() != null ? e.getProduct().getId() : null;
+        String productSlug = e.getProduct() != null ? e.getProduct().getSlug() : null;
         return new NotificationResponse(e.getId(), e.getTitle(), e.getBody(),
                 e.getImageUrl(), e.getType(),
                 orderCode,
+                productId, productSlug,
                 e.getIsRead(), e.getCreatedAt());
     }
 }

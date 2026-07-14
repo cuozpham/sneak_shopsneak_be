@@ -26,6 +26,10 @@ public class NotificationEntity {
     @JoinColumn(name = "order_id")
     private OrderEntity order;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    private ProductEntity product;
+
     @Column(nullable = false, length = 255)
     private String title;
 
