@@ -24,8 +24,8 @@ spring:
       static-locations: "file:uploads/,classpath:/static/"
   servlet:
     multipart:
-      max-file-size: 20MB
-      max-request-size: 50MB
+      max-file-size: 60MB
+      max-request-size: 80MB
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:465}
