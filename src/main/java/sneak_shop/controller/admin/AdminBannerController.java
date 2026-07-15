@@ -41,7 +41,7 @@ public class AdminBannerController {
     public ApiResponse<BannerEntity> create(@RequestBody BannerRequest req) {
         Integer catId = req.categoryId();
         long count = (catId == null) ? bannerRepository.countByCategoryIdIsNull() : bannerRepository.countByCategoryId(catId);
-        int limit = (catId == null) ? 9 : 3;
+        int limit = MAX_BANNERS;
         if (count >= limit) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Chi duoc toi da " + limit + " banner");
         }
