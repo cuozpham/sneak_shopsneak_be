@@ -8,8 +8,10 @@ import jakarta.validation.constraints.Size;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import sneak_shop.security.UserContext;
 import sneak_shop.common.exception.AppException;
 import sneak_shop.common.exception.ErrorCode;
 import sneak_shop.common.response.ApiResponse;
@@ -109,10 +111,15 @@ public class AdminUserController {
     }
 
     @PatchMapping("/{id}/role")
-    public ApiResponse<UserSummary> updateRole(@PathVariable Integer id,
+    public ApiResponse<UserSummary> updateRole(@AuthenticationPrincipal UserContext ctx,
+                                               @PathVariable Integer id,
                                                @Valid @RequestBody RoleRequest req) {
         if (req.role() == null)
             throw new AppException(ErrorCode.INVALID_REQUEST, "Vai tro khong hop le");
+
+        if (ctx != null && ctx.id() != null && ctx.id().equals(id)) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Không thể tự đổi vai trò của chính mình");
+        }
 
         UserEntity user = findUser(id);
         if (user.getRole() == UserRole.admin && req.role() != UserRole.admin
@@ -125,7 +132,11 @@ public class AdminUserController {
     }
 
     @PatchMapping("/{id}/lock")
-    public ApiResponse<UserSummary> lock(@PathVariable Integer id, @Valid @RequestBody LockRequest req) {
+    public ApiResponse<UserSummary> lock(@AuthenticationPrincipal UserContext ctx,
+                                         @PathVariable Integer id, @Valid @RequestBody LockRequest req) {
+        if (ctx != null && ctx.id() != null && ctx.id().equals(id)) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Không thể tự khóa tài khoản của chính mình");
+        }
         UserEntity user = findUser(id);
         if (user.getDeletedAt() != null)
             throw new AppException(ErrorCode.INVALID_REQUEST, "Tai khoan da bi khoa");
@@ -145,7 +156,10 @@ public class AdminUserController {
     }
 
     @DeleteMapping("/{id}")
-    public ApiResponse<UserSummary> delete(@PathVariable Integer id) {
+    public ApiResponse<UserSummary> delete(@AuthenticationPrincipal UserContext ctx, @PathVariable Integer id) {
+        if (ctx != null && ctx.id() != null && ctx.id().equals(id)) {
+            throw new AppException(ErrorCode.INVALID_REQUEST, "Không thể tự xóa tài khoản của chính mình");
+        }
         UserEntity user = findUser(id);
         if (user.getDeletedAt() != null && user.getStatus() == UserStatus.inactive && Boolean.FALSE.equals(user.getEnabled())) {
             throw new AppException(ErrorCode.INVALID_REQUEST, "Tai khoan da bi xoa");
