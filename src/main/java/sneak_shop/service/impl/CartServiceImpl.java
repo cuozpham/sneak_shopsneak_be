@@ -34,7 +34,7 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     public List<CartItemResponse> getCart(Integer userId) {
-        return cartItemRepository.findByUserId(userId)
+        return cartItemRepository.findByUserIdOrderByCreatedAtAsc(userId)
                 .stream().map(CartItemResponse::from).toList();
     }
 

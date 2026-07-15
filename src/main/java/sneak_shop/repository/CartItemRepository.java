@@ -11,6 +11,7 @@ import java.util.Optional;
 
 public interface CartItemRepository extends JpaRepository<CartItemEntity, Integer> {
     List<CartItemEntity> findByUserId(Integer userId);
+    List<CartItemEntity> findByUserIdOrderByCreatedAtAsc(Integer userId);
 
     @Query("""
         SELECT c FROM CartItemEntity c
