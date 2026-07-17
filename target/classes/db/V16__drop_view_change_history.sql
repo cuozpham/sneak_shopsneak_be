@@ -1,3 +1,0 @@
-ALTER TABLE view_change_history DROP COLUMN IF EXISTS changed_by;
-
-DROP TABLE IF EXISTS view_change_history;
