@@ -1,0 +1,17 @@
+
+target/
+
+uploads/
+
+*.log
+
+.env
+
+src/main/resources/google-service-account.json
+
+.idea/
+
+*.iml
+
+.DS_Store
+
